@@ -23,6 +23,7 @@ The application runs entirely in the browser. Projects are stored locally and ca
 - Export one portable `.avatar.json` definition for React or framework-free JavaScript/ESM.
 - Export and import the complete Studio project as JSON.
 - Use the interface in English, French, or Simplified Chinese.
+- Let AI agents create and edit avatar sets through the bundled MCP server.
 
 ## How the Studio works
 
@@ -61,6 +62,29 @@ Install `@bible-strong/avatar-web` for a DOM renderer without React. The integra
 the same `.avatar.json`, a lightweight ESM wrapper and usage instructions; it does not copy the
 rendering engine into every avatar export. `avatar-web` also depends on `avatar-core`.
 
+### AI agents (MCP server)
+
+`packages/avatar-mcp` is a Model Context Protocol server that lets any MCP-capable agent create
+avatars and whole avatar sets from compact specs, edit them, validate them and render SVG/PNG
+previews. It writes the same `.avatar.json` definitions as the Studio:
+
+```bash
+pnpm --filter @teddyjubu/avatar-mcp build
+claude mcp add avatar-lab -- node "$PWD/packages/avatar-mcp/dist/cli.js" --root "$PWD/avatars"
+```
+
+Claude Code users can install it as a plugin, which also adds an avatar design skill and an
+`/avatar-lab:avatar-set` command:
+
+```text
+/plugin marketplace add TeddyJubu/avatar-lab
+/plugin install avatar-lab@bible-strong-avatar-lab
+```
+
+See [`packages/avatar-mcp/README.md`](./packages/avatar-mcp/README.md) for the tools and client
+configuration, and [`plugins/avatar-lab/README.md`](./plugins/avatar-lab/README.md) for the
+plugin.
+
 ### Photo Mode
 
 Photo Mode exports the currently rendered avatar as SVG or PNG. You can choose the resolution and use a transparent, solid, linear-gradient, or radial-gradient background.
@@ -95,6 +119,7 @@ Open [http://localhost:5173](http://localhost:5173).
 | `pnpm test:watch`   | Run Vitest in watch mode.                                                         |
 | `pnpm engine`       | Regenerate the standalone engine used by exported packages.                       |
 | `pnpm engine:check` | Verify that the committed generated engine is current.                            |
+| `pnpm plugin`       | Regenerate the Claude Code plugin's bundled MCP server and manifest versions.     |
 | `pnpm build`        | Regenerate the engine and create a production build in `dist/`.                   |
 | `pnpm preview`      | Serve the production build locally.                                               |
 | `pnpm format`       | Format the repository with Prettier.                                              |
@@ -153,6 +178,8 @@ Geometry, playback, document operations, and the standalone runtime remain frame
 | `src/features/studio/`                   | Studio controller, composed views, persistence, bundled data, and tests. |
 | `src/i18n/`                              | Localized interface copy and translation tests.                          |
 | `src/lib/`                               | Small shared utilities without product-domain ownership.                 |
+| `packages/avatar-mcp/`                   | MCP server and authoring API for agent-created avatar sets.              |
+| `plugins/avatar-lab/`                    | Claude Code plugin: bundled MCP server, skill and command.               |
 | `scripts/generate-standalone-engine.mjs` | Standalone-engine generator.                                             |
 | `docs/adr/`                              | Accepted architecture decisions.                                         |
 | `legacy/`                                | Self-contained HTML prototypes that preceded the React application.      |

@@ -8,3 +8,4 @@ public/sitemap.xml
 src/features/studio/defaultStudioDocument.json
 src/features/export/standaloneEngine.generated.ts
 pnpm-lock.yaml
+plugins/avatar-lab/server/avatar-mcp.mjs

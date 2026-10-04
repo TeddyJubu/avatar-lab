@@ -1,0 +1,18 @@
+{
+  "name": "bible-strong-avatar-lab",
+  "owner": { "name": "TeddyJubu", "url": "https://github.com/TeddyJubu" },
+  "metadata": {
+    "description": "Claude Code plugins for designing Bible Strong procedural avatars."
+  },
+  "plugins": [
+    {
+      "name": "avatar-lab",
+      "source": "./plugins/avatar-lab",
+      "description": "Design, edit, validate and render procedural SVG avatars and whole avatar sets.",
+      "version": "0.1.0",
+      "license": "AGPL-3.0-only",
+      "category": "design",
+      "keywords": ["avatar", "svg", "animation", "mcp", "design"]
+    }
+  ]
+}
