@@ -1,0 +1,65 @@
+{
+  "name": "@bible-strong/avatar-mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server that lets AI agents design, edit, validate and render Bible Strong procedural avatar sets.",
+  "keywords": [
+    "avatar",
+    "svg",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents"
+  ],
+  "author": "Stéphane Montlouis-Calixte",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "homepage": "https://github.com/smontlouis/bible-strong-avatar-lab#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smontlouis/bible-strong-avatar-lab.git",
+    "directory": "packages/avatar-mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/smontlouis/bible-strong-avatar-lab/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "bin": {
+    "avatar-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config vite.config.ts && tsc -p tsconfig.build.json",
+    "prepack": "pnpm build",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@bible-strong/avatar-core": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "zod": "^4.6.5"
+  },
+  "optionalDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.13"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

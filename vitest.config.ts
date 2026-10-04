@@ -9,6 +9,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.join(root, 'src'),
+      '@bible-strong/avatar-core/schema': path.join(
+        root,
+        'packages/avatar-core/src/avatarDefinition.schema.json'
+      ),
       '@bible-strong/avatar-core': path.join(root, 'packages/avatar-core/src/index.ts'),
     },
   },

@@ -23,6 +23,7 @@ The application runs entirely in the browser. Projects are stored locally and ca
 - Export one portable `.avatar.json` definition for React or framework-free JavaScript/ESM.
 - Export and import the complete Studio project as JSON.
 - Use the interface in English, French, or Simplified Chinese.
+- Let AI agents create and edit avatar sets through the bundled MCP server.
 
 ## How the Studio works
 
@@ -60,6 +61,20 @@ package depends on `@bible-strong/avatar-core` for validation, playback and geom
 Install `@bible-strong/avatar-web` for a DOM renderer without React. The integration ZIP contains
 the same `.avatar.json`, a lightweight ESM wrapper and usage instructions; it does not copy the
 rendering engine into every avatar export. `avatar-web` also depends on `avatar-core`.
+
+### AI agents (MCP server)
+
+`packages/avatar-mcp` is a Model Context Protocol server that lets any MCP-capable agent create
+avatars and whole avatar sets from compact specs, edit them, validate them and render SVG/PNG
+previews. It writes the same `.avatar.json` definitions as the Studio:
+
+```bash
+pnpm --filter @bible-strong/avatar-mcp build
+claude mcp add avatar-lab -- node "$PWD/packages/avatar-mcp/dist/cli.js" --root "$PWD/avatars"
+```
+
+See [`packages/avatar-mcp/README.md`](./packages/avatar-mcp/README.md) for the tools and client
+configuration.
 
 ### Photo Mode
 
@@ -153,6 +168,7 @@ Geometry, playback, document operations, and the standalone runtime remain frame
 | `src/features/studio/`                   | Studio controller, composed views, persistence, bundled data, and tests. |
 | `src/i18n/`                              | Localized interface copy and translation tests.                          |
 | `src/lib/`                               | Small shared utilities without product-domain ownership.                 |
+| `packages/avatar-mcp/`                   | MCP server and authoring API for agent-created avatar sets.              |
 | `scripts/generate-standalone-engine.mjs` | Standalone-engine generator.                                             |
 | `docs/adr/`                              | Accepted architecture decisions.                                         |
 | `legacy/`                                | Self-contained HTML prototypes that preceded the React application.      |

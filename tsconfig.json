@@ -14,6 +14,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@bible-strong/avatar-core": ["./packages/avatar-core/src/index.ts"],
+      "@bible-strong/avatar-core/schema": [
+        "./packages/avatar-core/src/avatarDefinition.schema.json"
+      ],
       "@bible-strong/avatar-core/*": ["./packages/avatar-core/src/*"],
       "@bible-strong/avatar-react": ["./packages/avatar-react/src/index.ts"]
     },
