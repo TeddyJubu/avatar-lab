@@ -282,13 +282,17 @@ export const sampleAvatarFrame = (
   if (!targetDefinition) {
     const neutral = definition.expressions.neutral
     return {
-      expression: expressionFromDefinition('neutral', neutral),
+      expression: expressionFromDefinition('neutral', neutral, definition.face),
       colors: expressionColors(definition, neutral),
       blink: 1,
       sampledAt,
     }
   }
-  let expression = expressionFromDefinition(state.activeExpression, targetDefinition)
+  let expression = expressionFromDefinition(
+    state.activeExpression,
+    targetDefinition,
+    definition.face
+  )
   let colors = expressionColors(definition, targetDefinition)
   let blink = 1
   if (state.directTransition && !environment.reduceMotion) {
@@ -312,7 +316,7 @@ export const sampleAvatarFrame = (
         const from =
           state.transitionSnapshot?.expression ??
           (fromDefinition
-            ? expressionFromDefinition(state.transitionFrom, fromDefinition)
+            ? expressionFromDefinition(state.transitionFrom, fromDefinition, definition.face)
             : undefined)
         const fromColors =
           state.transitionSnapshot?.colors ??

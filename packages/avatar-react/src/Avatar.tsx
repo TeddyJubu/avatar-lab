@@ -2,6 +2,7 @@ import {
   advanceAvatarPlayback,
   createAvatarPlaybackState,
   MAX_BODY_NODES,
+  MAX_WHISKERS_PER_SIDE,
   playAvatarAnimation,
   pauseAvatarPlayback,
   renderAvatarDefinition,
@@ -34,6 +35,9 @@ import './styles.css'
 const validatedDefinitions = new WeakSet<object>()
 const controlledExpressionTransitionMs = 420
 const bodyPathSlots = MAX_BODY_NODES + 2
+/** Two stroked halves of the mouth line plus its opening. */
+const mouthPathSlots = 3
+const whiskerPathSlots = MAX_WHISKERS_PER_SIDE * 2
 
 const runtimeEnvironment = () => ({
   random: Math.random,
@@ -200,6 +204,9 @@ export function Avatar({
   const rightPathRef = useRef<SVGPathElement>(null)
   const backPathRefs = useRef<(SVGPathElement | null)[]>([])
   const frontPathRefs = useRef<(SVGPathElement | null)[]>([])
+  const mouthPathRefs = useRef<(SVGPathElement | null)[]>([])
+  const whiskerBackPathRefs = useRef<(SVGPathElement | null)[]>([])
+  const whiskerFrontPathRefs = useRef<(SVGPathElement | null)[]>([])
   const defaultPlaybackStarted = useRef(false)
   const completedAnimation = useRef<AnimationKey | undefined>(undefined)
   const playbackRef = useRef<CorePlaybackState | null>(null)
@@ -226,6 +233,20 @@ export function Avatar({
     frontPathRefs.current.forEach((element, index) => {
       element?.setAttribute('d', frameScene.geometry.frontPaths[index] ?? '')
       element?.setAttribute('fill', frameScene.colors.body)
+    })
+    const mouthColor = frameScene.colors.mouth ?? frameScene.colors.eyes
+    mouthPathRefs.current.forEach((element, index) => {
+      element?.setAttribute('d', frameScene.geometry.mouthPaths[index] ?? '')
+      element?.setAttribute('fill', mouthColor)
+    })
+    const whiskerColor = frameScene.colors.whiskers ?? frameScene.colors.eyes
+    whiskerBackPathRefs.current.forEach((element, index) => {
+      element?.setAttribute('d', frameScene.geometry.whiskerBackPaths[index] ?? '')
+      element?.setAttribute('fill', whiskerColor)
+    })
+    whiskerFrontPathRefs.current.forEach((element, index) => {
+      element?.setAttribute('d', frameScene.geometry.whiskerFrontPaths[index] ?? '')
+      element?.setAttribute('fill', whiskerColor)
     })
   }
 
@@ -470,6 +491,8 @@ export function Avatar({
   }))
 
   const scene = renderAvatarDefinition(definition)
+  const mouthColor = scene.colors.mouth ?? scene.colors.eyes
+  const whiskerColor = scene.colors.whiskers ?? scene.colors.eyes
   return (
     <div
       className={['bs-avatar', className ?? ''].filter(Boolean).join(' ')}
@@ -487,6 +510,20 @@ export function Avatar({
             <path ref={clipPathRef} d={scene.geometry.headPath} />
           </clipPath>
         </defs>
+        {definition.face?.whiskers ? (
+          <g>
+            {Array.from({ length: whiskerPathSlots }, (_, index) => (
+              <path
+                ref={element => {
+                  whiskerBackPathRefs.current[index] = element
+                }}
+                d={scene.geometry.whiskerBackPaths[index] ?? ''}
+                fill={whiskerColor}
+                key={`whisker-back-${index}`}
+              />
+            ))}
+          </g>
+        ) : null}
         {Array.from({ length: bodyPathSlots }, (_, index) => (
           <path
             ref={element => {
@@ -509,6 +546,18 @@ export function Avatar({
             d={scene.geometry.rightPath}
             opacity={scene.geometry.rightVisible ? 1 : 0}
           />
+          {definition.face?.mouth
+            ? Array.from({ length: mouthPathSlots }, (_, index) => (
+                <path
+                  ref={element => {
+                    mouthPathRefs.current[index] = element
+                  }}
+                  d={scene.geometry.mouthPaths[index] ?? ''}
+                  fill={mouthColor}
+                  key={`mouth-${index}`}
+                />
+              ))
+            : null}
         </g>
         {Array.from({ length: bodyPathSlots }, (_, index) => (
           <path
@@ -520,6 +569,20 @@ export function Avatar({
             key={`front-${index}`}
           />
         ))}
+        {definition.face?.whiskers ? (
+          <g>
+            {Array.from({ length: whiskerPathSlots }, (_, index) => (
+              <path
+                ref={element => {
+                  whiskerFrontPathRefs.current[index] = element
+                }}
+                d={scene.geometry.whiskerFrontPaths[index] ?? ''}
+                fill={whiskerColor}
+                key={`whisker-front-${index}`}
+              />
+            ))}
+          </g>
+        ) : null}
       </svg>
     </div>
   )

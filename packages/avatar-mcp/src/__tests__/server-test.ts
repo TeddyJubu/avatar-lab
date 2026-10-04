@@ -193,3 +193,40 @@ it('prepares the workspace artifact and exports avatars as database documents', 
     '"name": "Pixel Pro"'
   )
 })
+
+it('adds an animated mouth and whiskers through the edit tool', async () => {
+  const created = await call('create_avatar', {
+    spec: { name: 'Mochi', behavior: { include: 'none' } },
+    outputPath: 'avatars/mochi.avatar.json',
+    preview: false,
+  })
+  expect(created.isError).toBeFalsy()
+
+  const edited = await call('edit_avatar', {
+    path: 'avatars/mochi.avatar.json',
+    operations: [
+      {
+        op: 'set_face',
+        mouth: { thickness: 3, x: 0, y: 50, width: 22, curve: 4, cat: 1 },
+        whiskers: { count: 3, thickness: 2, x: 70, y: 42, length: 44 },
+      },
+      {
+        op: 'upsert_expression',
+        key: 'meow',
+        expression: { mouth: { open: 8 }, whiskers: { angle: 10 } },
+      },
+    ],
+    preview: false,
+    includeDefinition: false,
+  })
+  expect(edited.isError).toBeFalsy()
+  const saved = parseAvatarDefinition(
+    await readFile(path.join(root, 'avatars/mochi.avatar.json'), 'utf8')
+  )
+  if (!saved.ok) throw new Error(saved.errors[0]?.message)
+  expect(saved.value.face?.whiskers?.count).toBe(3)
+  expect(saved.value.expressions.meow).toMatchObject({
+    mouth: { open: 8 },
+    whiskers: { angle: 10 },
+  })
+})

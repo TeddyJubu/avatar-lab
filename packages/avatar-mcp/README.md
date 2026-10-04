@@ -129,6 +129,11 @@ default) and the bundled behavior library.
   expression they reference.
 - `create_avatar_set` accepts `variations: { count, seed, templates, palette, namePrefix }` to
   generate deterministic sets, and `shared` defaults for colors, eyes and behavior.
+- `face` adds an optional mouth and whiskers (drawn in the eye color unless they set `color`):
+  `{ "mouth": { "thickness": 3, "x": 0, "y": 50, "width": 22, "curve": 4, "cat": 1 },
+"whiskers": { "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44 } }`. Expressions
+  animate them with partial overrides such as `"mouth": { "curve": 8, "open": 6 }` and
+  `"whiskers": { "angle": 12 }`; the `set_face` edit changes or removes them.
 
 ## Library use
 

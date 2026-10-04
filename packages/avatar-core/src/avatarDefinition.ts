@@ -58,6 +58,62 @@ export type AvatarBodyDefinition = {
   nodes: AvatarBodyNodeDefinition[]
 }
 
+/** Animatable mouth values, in the facial frame shared with the eyes. */
+export type AvatarMouthShapeDefinition = {
+  /** Center of the line between the two corners. */
+  x: number
+  y: number
+  /** Distance between the corners; 0 hides the mouth. */
+  width: number
+  /** How far the middle bows below the corners: positive smiles, negative frowns. */
+  curve: number
+  /** Blends the single curve (0) into a cat "ω" with two lobes (1). Defaults to 0. */
+  cat?: number
+  /** Depth of the opening below the line; 0 keeps the mouth closed. Defaults to 0. */
+  open?: number
+  /** Rotation in degrees, for smirks. Defaults to 0. */
+  tilt?: number
+}
+
+export type AvatarMouthDefinition = AvatarMouthShapeDefinition & {
+  /** Line thickness. */
+  thickness: number
+  /** Defaults to the eye color shown by the current frame. */
+  color?: HexColor
+}
+
+/** Animatable whisker values. */
+export type AvatarWhiskerPoseDefinition = {
+  /** Length of each whisker; 0 hides them. */
+  length: number
+  /** Rotation of the whole fan in degrees; positive raises the tips. Defaults to 0. */
+  angle?: number
+  /** Angle in degrees between neighbouring whiskers. Defaults to 10. */
+  spread?: number
+  /** How far each tip droops (positive) or curls up (negative). Defaults to 0. */
+  curve?: number
+}
+
+export type AvatarWhiskersDefinition = AvatarWhiskerPoseDefinition & {
+  /** Whiskers on each side. */
+  count: number
+  /** Thickness at the root; whiskers taper toward the tip. */
+  thickness: number
+  /** Root of the right-hand whiskers in the facial frame; the left side is mirrored. */
+  x: number
+  y: number
+  /** Vertical distance between neighbouring roots. Defaults to 7. */
+  gap?: number
+  /** Defaults to the eye color shown by the current frame. */
+  color?: HexColor
+}
+
+/** Optional face features drawn on the primary surface in addition to the eyes. */
+export type AvatarFaceDefinition = {
+  mouth?: AvatarMouthDefinition
+  whiskers?: AvatarWhiskersDefinition
+}
+
 export type AvatarExpressionDefinition = {
   head: { x: number; y: number; z: number }
   eyes: {
@@ -71,6 +127,10 @@ export type AvatarExpressionDefinition = {
     body: 'none' | 'slowDrift' | 'shake'
   }
   colors?: Partial<AvatarColorsDefinition>
+  /** Overrides the definition's mouth values while the expression is shown. */
+  mouth?: Partial<AvatarMouthShapeDefinition>
+  /** Overrides the definition's whisker values while the expression is shown. */
+  whiskers?: Partial<AvatarWhiskerPoseDefinition>
 }
 
 export type AvatarAnimationStepDefinition = {
@@ -107,6 +167,8 @@ export type AvatarDefinition = {
   expressionOrder: ExpressionKey[]
   animations: Record<AnimationKey, AvatarAnimationDefinition>
   animationOrder: AnimationKey[]
+  /** Optional mouth and whiskers; expressions animate them through `mouth` and `whiskers`. */
+  face?: AvatarFaceDefinition
   /** @deprecated Accepted for pre-release JSON compatibility; it no longer adds animations. */
   standardAnimationSet?: 1
 }

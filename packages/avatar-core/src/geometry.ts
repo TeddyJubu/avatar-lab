@@ -34,11 +34,28 @@ export type Expression = {
   bodyMotion: BodyMotion
   bodyColor?: string
   eyeColor?: string
-}
+} & Partial<Record<FaceExpressionField, number>>
+
+/** Animatable face values, present only when the avatar defines a mouth or whiskers. */
+export const faceExpressionFields = [
+  'mouthX',
+  'mouthY',
+  'mouthWidth',
+  'mouthCurve',
+  'mouthCat',
+  'mouthOpen',
+  'mouthTilt',
+  'whiskerLength',
+  'whiskerAngle',
+  'whiskerSpread',
+  'whiskerCurve',
+] as const
+
+export type FaceExpressionField = (typeof faceExpressionFields)[number]
 
 export type ExpressionNumericField = Exclude<
   keyof Expression,
-  'id' | 'semanticKey' | 'bodyColor' | 'eyeColor' | 'eyeMotion' | 'bodyMotion'
+  'id' | 'semanticKey' | 'bodyColor' | 'eyeColor' | 'eyeMotion' | 'bodyMotion' | FaceExpressionField
 >
 
 export type AvatarPose = {
@@ -57,12 +74,55 @@ export type AvatarGeometry = {
   leftVisible: boolean
   rightVisible: boolean
   wirePaths: string[]
+  /** Filled mouth shapes painted on the face. Draw them with the eyes, clipped to the head. */
+  mouthPaths: string[]
+  mouthVisible: boolean
+  /** Whiskers rooted on the side of the face turned away. Draw them before the head. */
+  whiskerBackPaths: string[]
+  /** Whiskers rooted on the visible side. Draw them after every other shape. */
+  whiskerFrontPaths: string[]
 }
+
+/** Static mouth settings plus resting values for the animatable ones. */
+export type FaceMouthStyle = {
+  thickness: number
+  x: number
+  y: number
+  width: number
+  curve: number
+  cat?: number
+  open?: number
+  tilt?: number
+}
+
+/** Static whisker settings plus resting values for the animatable ones. */
+export type FaceWhiskerStyle = {
+  count: number
+  thickness: number
+  x: number
+  y: number
+  length: number
+  gap?: number
+  angle?: number
+  spread?: number
+  curve?: number
+}
+
+export type FaceStyle = {
+  mouth?: FaceMouthStyle
+  whiskers?: FaceWhiskerStyle
+}
+
+export const DEFAULT_WHISKER_GAP = 7
+export const DEFAULT_WHISKER_SPREAD = 10
+export const MAX_WHISKERS_PER_SIDE = 4
 
 export type RenderAvatarOptions = {
   includeWire?: boolean
   bodyNodes?: BodyNode[]
   eyeOffset?: Readonly<{ x: number; y: number }>
+  /** Mouth and whiskers; their animatable values come from the pose expression when present. */
+  face?: Readonly<FaceStyle>
 }
 
 export type EyeEditorGeometry = {
@@ -489,6 +549,15 @@ export const interpolatePose = (from: AvatarPose, to: AvatarPose, progress: numb
       target = nearestEquivalentAngle(target, from.expression[field])
     }
     expression[field] = from.expression[field] + (target - from.expression[field]) * progress
+  })
+  faceExpressionFields.forEach(field => {
+    const start = from.expression[field]
+    const end = to.expression[field]
+    if (start === undefined || end === undefined) {
+      if (end !== undefined) expression[field] = end
+      return
+    }
+    expression[field] = start + (end - start) * progress
   })
   return {
     expression,
@@ -1234,6 +1303,151 @@ const accessoryLayers = (pose: AvatarPose, nodes: BodyNode[]) => {
   }
 }
 
+type Point2 = readonly [number, number]
+
+const MOUTH_HALF_SAMPLES = 14
+const STROKE_CAP_SAMPLES = 8
+const WHISKER_SAMPLES = 10
+/** Whiskers leave the cheek slightly toward the viewer so they never sink into the face. */
+const WHISKER_FORWARD_TILT = 0.35
+const WHISKER_TIP_THICKNESS_RATIO = 0.3
+const MIN_FACE_FEATURE_SIZE = 0.5
+
+/** Closed outline of a polyline stroked with round caps; `radii` lets the stroke taper. */
+const strokeOutline = (points: readonly Point2[], radii: readonly number[]): Point2[] => {
+  const count = points.length
+  if (count < 2) return []
+  const normals = points.map((_, index) => {
+    const previous = points[Math.max(0, index - 1)]
+    const next = points[Math.min(count - 1, index + 1)]
+    const dx = next[0] - previous[0]
+    const dy = next[1] - previous[1]
+    const length = Math.hypot(dx, dy) || 1
+    return [-dy / length, dx / length] as const
+  })
+  const offset = (index: number, side: 1 | -1): Point2 => [
+    points[index][0] + normals[index][0] * radii[index] * side,
+    points[index][1] + normals[index][1] * radii[index] * side,
+  ]
+  // A cap sweeps half a turn from one side of the stroke to the other, through its end.
+  const cap = (index: number, side: 1 | -1): Point2[] => {
+    const start = Math.atan2(normals[index][1] * side, normals[index][0] * side)
+    return Array.from({ length: STROKE_CAP_SAMPLES - 1 }, (_, step) => {
+      const angle = start - ((step + 1) / STROKE_CAP_SAMPLES) * Math.PI
+      return [
+        points[index][0] + Math.cos(angle) * radii[index],
+        points[index][1] + Math.sin(angle) * radii[index],
+      ] as const
+    })
+  }
+  return [
+    ...points.map((_, index) => offset(index, 1)),
+    ...cap(count - 1, 1),
+    ...points.map((_, index) => offset(count - 1 - index, -1)),
+    ...cap(0, -1),
+  ]
+}
+
+const flatPath = (points: readonly Point2[]) => path(points.map(([x, y]) => [x, y, 0] as const))
+
+/** Mouth line profile: 1 - t² for a single curve, two lobes meeting at the center for a cat. */
+const mouthProfile = (t: number, cat: number) =>
+  (1 - cat) * (1 - t * t) + cat * (1 - (2 * Math.abs(t) - 1) ** 2)
+
+const mouthGeometry = (pose: AvatarPose, surface: SurfaceConfig, style: FaceMouthStyle) => {
+  const expression = pose.expression
+  const width = Math.max(0, expression.mouthWidth ?? style.width)
+  if (width < MIN_FACE_FEATURE_SIZE || style.thickness <= 0) return { paths: [], visible: false }
+  const centerX = expression.mouthX ?? style.x
+  const centerY = expression.mouthY ?? style.y
+  const curve = expression.mouthCurve ?? style.curve
+  const cat = clamp(expression.mouthCat ?? style.cat ?? 0, 0, 1)
+  const open = Math.max(0, expression.mouthOpen ?? style.open ?? 0)
+  const tilt = radians(expression.mouthTilt ?? style.tilt ?? 0)
+  const half = width / 2
+  const radius = style.thickness / 2
+  const lineAt = (t: number): Point2 => [t * half, curve * mouthProfile(t, cat)]
+  const onFace = ([x, y]: Point2) =>
+    projectFacePoint(
+      pose,
+      surface,
+      centerX + x * Math.cos(tilt) - y * Math.sin(tilt),
+      centerY + x * Math.sin(tilt) + y * Math.cos(tilt)
+    )
+
+  // Each half is stroked separately so the cusp of a cat mouth keeps a clean round join.
+  const shapes = ([-1, 1] as const).map(sign => {
+    const line = Array.from({ length: MOUTH_HALF_SAMPLES + 1 }, (_, step) =>
+      lineAt((sign * step) / MOUTH_HALF_SAMPLES)
+    )
+    return strokeOutline(
+      line,
+      line.map(() => radius)
+    )
+  })
+  if (open > MIN_FACE_FEATURE_SIZE / 2) {
+    const steps = MOUTH_HALF_SAMPLES * 2
+    const ts = Array.from({ length: steps + 1 }, (_, step) => -1 + (2 * step) / steps)
+    shapes.push([
+      ...ts.map(lineAt),
+      ...[...ts].reverse().map((t): Point2 => {
+        const rounded = Math.sqrt(Math.max(0, 1 - t * t))
+        const top = lineAt(t)[1]
+        return [t * half, Math.max(top, curve * (1 - t * t)) + open * rounded]
+      }),
+    ])
+  }
+  const facing = [-1, -0.5, 0, 0.5, 1].reduce((total, t) => total + onFace(lineAt(t)).normal[2], 0)
+  if (facing <= 0) return { paths: [], visible: false }
+  return {
+    paths: shapes.map(shape => path(shape.map(point => onFace(point).point))),
+    visible: true,
+  }
+}
+
+const whiskerGeometry = (pose: AvatarPose, surface: SurfaceConfig, style: FaceWhiskerStyle) => {
+  const expression = pose.expression
+  const back: string[] = []
+  const front: string[] = []
+  const length = Math.max(0, expression.whiskerLength ?? style.length)
+  if (length < MIN_FACE_FEATURE_SIZE || style.thickness <= 0) return { back, front }
+  const count = clamp(Math.round(style.count), 1, MAX_WHISKERS_PER_SIDE)
+  const gap = style.gap ?? DEFAULT_WHISKER_GAP
+  const angle = expression.whiskerAngle ?? style.angle ?? 0
+  const spread = expression.whiskerSpread ?? style.spread ?? DEFAULT_WHISKER_SPREAD
+  const curve = expression.whiskerCurve ?? style.curve ?? 0
+  const rootRadius = style.thickness / 2
+  const radii = Array.from(
+    { length: WHISKER_SAMPLES + 1 },
+    (_, step) => rootRadius * (1 - (1 - WHISKER_TIP_THICKNESS_RATIO) * (step / WHISKER_SAMPLES))
+  )
+  ;([-1, 1] as const).forEach(side => {
+    for (let index = 0; index < count; index += 1) {
+      // Negative offsets are the upper whiskers, whose tips fan upward.
+      const offset = index - (count - 1) / 2
+      const [faceX, faceY] = canonicalFaceCoordinates(side * style.x, style.y + offset * gap)
+      const root = surfaceFrontSampleAt(surface, faceX, faceY)
+      const fan = radians(angle - offset * spread)
+      const rawDirection: Point3 = [side * Math.cos(fan), -Math.sin(fan), WHISKER_FORWARD_TILT]
+      const directionLength = Math.hypot(...rawDirection)
+      const direction = rawDirection.map(value => value / directionLength)
+      const samples = Array.from({ length: WHISKER_SAMPLES + 1 }, (_, step) => {
+        const progress = step / WHISKER_SAMPLES
+        const point = projectLocalPoint(pose, [
+          root.point[0] + direction[0] * length * progress,
+          root.point[1] + direction[1] * length * progress + curve * progress * progress,
+          root.point[2] + direction[2] * length * progress,
+        ])
+        return [point[0], point[1]] as const
+      })
+      const outline = flatPath(strokeOutline(samples, radii))
+      const facing = rotateWithQuaternion(pose.orientation, root.normal)[2]
+      ;(facing > 0 ? front : back).push(outline)
+    }
+  })
+  return { back, front }
+}
+
 export const renderAvatar = (
   pose: AvatarPose,
   surface: SurfaceConfig,
@@ -1246,6 +1460,10 @@ export const renderAvatar = (
   const right = rightSamples.map(sample => sample.point)
   const accessories = accessoryLayers(pose, options.bodyNodes ?? [])
   const compositePaths = compositeBackPaths(pose, surface)
+  const mouth = options.face?.mouth ? mouthGeometry(pose, surface, options.face.mouth) : null
+  const whiskers = options.face?.whiskers
+    ? whiskerGeometry(pose, surface, options.face.whiskers)
+    : null
   return {
     backPaths: [...compositePaths, ...accessories.backPaths],
     frontPaths: accessories.frontPaths,
@@ -1257,5 +1475,9 @@ export const renderAvatar = (
     leftVisible: leftSamples.reduce((total, sample) => total + sample.normal[2], 0) > 0,
     rightVisible: rightSamples.reduce((total, sample) => total + sample.normal[2], 0) > 0,
     wirePaths: options.includeWire === false ? [] : wirePaths(pose, surface),
+    mouthPaths: mouth?.paths ?? [],
+    mouthVisible: mouth?.visible ?? false,
+    whiskerBackPaths: whiskers?.back ?? [],
+    whiskerFrontPaths: whiskers?.front ?? [],
   }
 }

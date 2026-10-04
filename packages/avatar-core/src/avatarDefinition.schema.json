@@ -48,6 +48,7 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/semanticKey" }
     },
+    "face": { "$ref": "#/$defs/face" },
     "standardAnimationSet": { "const": 1, "deprecated": true }
   },
   "$defs": {
@@ -194,7 +195,76 @@
             "body": { "$ref": "#/$defs/hexColor" },
             "eyes": { "$ref": "#/$defs/hexColor" }
           }
-        }
+        },
+        "mouth": { "$ref": "#/$defs/mouthShape" },
+        "whiskers": { "$ref": "#/$defs/whiskerPose" }
+      }
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "mouth": { "$ref": "#/$defs/mouth" },
+        "whiskers": { "$ref": "#/$defs/whiskers" }
+      }
+    },
+    "mouth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["thickness", "x", "y", "width", "curve"],
+      "properties": {
+        "thickness": { "type": "number", "minimum": 0.2, "maximum": 40 },
+        "x": { "$ref": "#/$defs/boundedNumber" },
+        "y": { "$ref": "#/$defs/boundedNumber" },
+        "width": { "type": "number", "minimum": 0, "maximum": 400 },
+        "curve": { "type": "number", "minimum": -200, "maximum": 200 },
+        "cat": { "type": "number", "minimum": 0, "maximum": 1 },
+        "open": { "type": "number", "minimum": 0, "maximum": 200 },
+        "tilt": { "type": "number", "minimum": -180, "maximum": 180 },
+        "color": { "$ref": "#/$defs/hexColor" }
+      }
+    },
+    "mouthShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "x": { "$ref": "#/$defs/boundedNumber" },
+        "y": { "$ref": "#/$defs/boundedNumber" },
+        "width": { "type": "number", "minimum": 0, "maximum": 400 },
+        "curve": { "type": "number", "minimum": -200, "maximum": 200 },
+        "cat": { "type": "number", "minimum": 0, "maximum": 1 },
+        "open": { "type": "number", "minimum": 0, "maximum": 200 },
+        "tilt": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "whiskers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "thickness", "x", "y", "length"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "thickness": { "type": "number", "minimum": 0.2, "maximum": 20 },
+        "x": { "$ref": "#/$defs/boundedNumber" },
+        "y": { "$ref": "#/$defs/boundedNumber" },
+        "gap": { "type": "number", "minimum": 0, "maximum": 100 },
+        "length": { "type": "number", "minimum": 0, "maximum": 400 },
+        "angle": { "type": "number", "minimum": -180, "maximum": 180 },
+        "spread": { "type": "number", "minimum": -90, "maximum": 90 },
+        "curve": { "type": "number", "minimum": -200, "maximum": 200 },
+        "color": { "$ref": "#/$defs/hexColor" }
+      }
+    },
+    "whiskerPose": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "length": { "type": "number", "minimum": 0, "maximum": 400 },
+        "angle": { "type": "number", "minimum": -180, "maximum": 180 },
+        "spread": { "type": "number", "minimum": -90, "maximum": 90 },
+        "curve": { "type": "number", "minimum": -200, "maximum": 200 }
       }
     },
     "blink": {
