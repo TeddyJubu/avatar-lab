@@ -62,7 +62,8 @@ the eyes sit near y 0, the chin near y 100 on the default sphere).
   \`{ "thickness": 3, "x": 0, "y": 50, "width": 22, "curve": 4, "cat": 1 }\`.
 - \`whiskers\`: \`count\` per side (1–4), root \`thickness\` (tips taper), right-hand root \`x\`/\`y\`
   (mirrored on the left), vertical \`gap\` between roots, \`length\` (0 hides them), \`angle\` of
-  the whole fan (positive raises the tips), \`spread\` between whiskers and tip \`curve\` (droop).
+  the whole fan in degrees (positive raises the tips), \`spread\` in degrees between neighbouring
+  whiskers and tip \`curve\` (droop).
   Example: \`{ "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44, "spread": 10 }\`.
 - Expressions animate them with partial overrides that transitions interpolate:
   \`"mouth": { "curve": 8, "open": 6 }\`, \`"whiskers": { "angle": 12, "spread": 16 }\`. Smile:

@@ -248,14 +248,34 @@ const resolveExpression = (
   return result
 }
 
+const REQUIRED_FACE_FIELDS = {
+  mouth: ['thickness', 'x', 'y', 'width', 'curve'],
+  whiskers: ['count', 'thickness', 'x', 'y', 'length'],
+} as const
+
+const listFields = (fields: readonly string[]) =>
+  `${fields.slice(0, -1).join(', ')} and ${fields.at(-1)}`
+
 /** Merges a face feature spec into the current one; `null` removes the feature. */
 const mergeFaceFeature = <T extends { color?: string }>(
+  feature: keyof typeof REQUIRED_FACE_FIELDS,
   current: Readonly<T> | undefined,
   spec: (Partial<Omit<T, 'color'>> & { color?: string }) | null | undefined,
   path: string
 ): T | undefined => {
   if (spec === null) return undefined
   if (spec === undefined) return current ? clone(current) : undefined
+  if (!current) {
+    const required = REQUIRED_FACE_FIELDS[feature]
+    const missing = required.filter(field => (spec as Record<string, unknown>)[field] === undefined)
+    if (missing.length) {
+      throw authoringError(
+        path,
+        'missing_face_fields',
+        `${feature === 'mouth' ? 'A new mouth needs' : 'New whiskers need'} ${listFields(required)}; missing ${missing.join(', ')}`
+      )
+    }
+  }
   const merged = { ...clone(current ?? ({} as T)), ...spec } as T
   if (spec.color !== undefined) merged.color = normalizeColor(spec.color, `${path}/color`)
   return merged
@@ -269,8 +289,14 @@ const resolveFace = (
   },
   path: string
 ): AvatarFaceDefinition | undefined => {
-  const mouth = mergeFaceFeature<AvatarMouthDefinition>(current?.mouth, spec.mouth, `${path}/mouth`)
+  const mouth = mergeFaceFeature<AvatarMouthDefinition>(
+    'mouth',
+    current?.mouth,
+    spec.mouth,
+    `${path}/mouth`
+  )
   const whiskers = mergeFaceFeature<AvatarWhiskersDefinition>(
+    'whiskers',
     current?.whiskers,
     spec.whiskers,
     `${path}/whiskers`
@@ -763,24 +789,39 @@ export const generateAvatarVariations = ({
   })
 }
 
-export const describeAvatar = (definition: Readonly<AvatarDefinition>) => ({
-  name: definition.name ?? null,
-  colors: definition.colors,
-  body: {
-    primary: definition.body.primary.type,
-    nodes: definition.body.nodes.map(node => node.surface.type),
-  },
-  face: {
-    mouth: Boolean(definition.face?.mouth),
-    whiskers: definition.face?.whiskers?.count ?? 0,
-  },
-  expressions: definition.expressionOrder,
-  animations: definition.animationOrder.map(key => ({
-    key,
-    playbackMode: definition.animations[key]!.playbackMode,
-    steps: definition.animations[key]!.steps.map(step => step.expression),
-    ...(definition.animations[key]!.metadata?.label
-      ? { label: definition.animations[key]!.metadata!.label }
-      : {}),
-  })),
-})
+/** Expressions whose mouth or whisker overrides have no face feature to animate. */
+export const faceWarnings = (definition: Readonly<AvatarDefinition>): string[] =>
+  (['mouth', 'whiskers'] as const).flatMap(feature => {
+    if (definition.face?.[feature]) return []
+    const keys = definition.expressionOrder.filter(key => definition.expressions[key]?.[feature])
+    if (!keys.length) return []
+    return [
+      `Expressions ${keys.join(', ')} override the ${feature}, but the avatar has no face.${feature}, so nothing is drawn; add one with set_face or remove the overrides`,
+    ]
+  })
+
+export const describeAvatar = (definition: Readonly<AvatarDefinition>) => {
+  const warnings = faceWarnings(definition)
+  return {
+    name: definition.name ?? null,
+    colors: definition.colors,
+    body: {
+      primary: definition.body.primary.type,
+      nodes: definition.body.nodes.map(node => node.surface.type),
+    },
+    face: {
+      mouth: Boolean(definition.face?.mouth),
+      whiskers: definition.face?.whiskers?.count ?? 0,
+    },
+    expressions: definition.expressionOrder,
+    animations: definition.animationOrder.map(key => ({
+      key,
+      playbackMode: definition.animations[key]!.playbackMode,
+      steps: definition.animations[key]!.steps.map(step => step.expression),
+      ...(definition.animations[key]!.metadata?.label
+        ? { label: definition.animations[key]!.metadata!.label }
+        : {}),
+    })),
+    ...(warnings.length ? { warnings } : {}),
+  }
+}

@@ -224,7 +224,10 @@ it('adds an animated mouth and whiskers through the edit tool', async () => {
     await readFile(path.join(root, 'avatars/mochi.avatar.json'), 'utf8')
   )
   if (!saved.ok) throw new Error(saved.errors[0]?.message)
-  expect(saved.value.face?.whiskers?.count).toBe(3)
+  expect(saved.value.face).toEqual({
+    mouth: { thickness: 3, x: 0, y: 50, width: 22, curve: 4, cat: 1 },
+    whiskers: { count: 3, thickness: 2, x: 70, y: 42, length: 44 },
+  })
   expect(saved.value.expressions.meow).toMatchObject({
     mouth: { open: 8 },
     whiskers: { angle: 10 },

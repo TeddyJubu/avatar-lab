@@ -11,7 +11,7 @@ const kitten: AvatarSpec = {
   colors: { body: '#ffd0ad', eyes: '#3a2431' },
   face: {
     mouth: { thickness: 3, x: 0, y: 48, width: 22, curve: 4, cat: 1, color: '#A35' },
-    whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40 },
+    whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40, color: '#123456' },
   },
   behavior: {
     include: 'none',
@@ -34,7 +34,7 @@ describe('face authoring', () => {
     const definition = create(kitten)
     expect(definition.face).toEqual({
       mouth: { thickness: 3, x: 0, y: 48, width: 22, curve: 4, cat: 1, color: '#aa3355' },
-      whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40 },
+      whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40, color: '#123456' },
     })
     expect(definition.expressions.giggle).toMatchObject({
       mouth: { curve: 8, open: 6 },
@@ -54,6 +54,7 @@ describe('face authoring', () => {
     ])
     if (!longer.ok) throw new Error(JSON.stringify(longer.errors))
     expect(longer.value.face!.whiskers).toMatchObject({ count: 2, length: 52, color: '#ffffff' })
+    expect(describeAvatar(longer.value)).not.toHaveProperty('warnings')
     expect(longer.value.face!.mouth).toEqual(definition.face!.mouth)
 
     const noWhiskers = editAvatarDefinition(definition, [{ op: 'set_face', whiskers: null }])
@@ -64,10 +65,30 @@ describe('face authoring', () => {
     if (!bare.ok) throw new Error(JSON.stringify(bare.errors))
     expect('face' in bare.value).toBe(false)
 
+    expect(describeAvatar(bare.value).warnings).toEqual([
+      'Expressions giggle, giggle-again override the mouth, but the avatar has no face.mouth, so nothing is drawn; add one with set_face or remove the overrides',
+      'Expressions giggle, giggle-again override the whiskers, but the avatar has no face.whiskers, so nothing is drawn; add one with set_face or remove the overrides',
+    ])
+
     const incomplete = editAvatarDefinition(bare.value, [{ op: 'set_face', mouth: { width: 20 } }])
-    expect(incomplete.ok).toBe(false)
-    if (incomplete.ok) return
-    expect(incomplete.errors.map(error => error.path)).toContain('/face/mouth/thickness')
+    expect(incomplete).toEqual({
+      ok: false,
+      errors: [
+        {
+          path: '/operations/0/mouth',
+          code: 'missing_face_fields',
+          message:
+            'A new mouth needs thickness, x, y, width and curve; missing thickness, x, y, curve',
+        },
+      ],
+    })
+    const emptyWhiskers = createAvatarFromSpec({ face: { whiskers: {} } })
+    expect(emptyWhiskers.ok).toBe(false)
+    if (emptyWhiskers.ok) return
+    expect(emptyWhiskers.errors[0]).toMatchObject({
+      path: '/face/whiskers',
+      code: 'missing_face_fields',
+    })
 
     const override = editAvatarDefinition(definition, [
       { op: 'upsert_expression', key: 'giggle', expression: { mouth: { tilt: -10 } } },
@@ -81,9 +102,13 @@ describe('face authoring', () => {
     const svg = renderAvatarSvg(definition, { expression: 'giggle' })
     const mouths = svg.match(/fill="#aa3355"/g) ?? []
     expect(mouths).toHaveLength(3)
-    const whiskers = svg.match(/fill="#3a2431"/g) ?? []
-    // Two eyes plus four whiskers.
-    expect(whiskers).toHaveLength(6)
-    expect(svg.indexOf('fill="#aa3355"')).toBeLessThan(svg.indexOf('</g>'))
+    expect(svg.match(/fill="#123456"/g)).toHaveLength(4)
+    // The mouth sits in the clipped eye group, after the eyes; the whiskers come after every
+    // other shape, so they are drawn on top of the face.
+    const eyesEnd = svg.indexOf('</g>', svg.indexOf('clip-path='))
+    expect(svg.lastIndexOf('fill="#3a2431"', eyesEnd)).toBeLessThan(svg.indexOf('fill="#aa3355"'))
+    expect(svg.lastIndexOf('fill="#aa3355"')).toBeLessThan(eyesEnd)
+    expect(svg.indexOf('fill="#123456"')).toBeGreaterThan(eyesEnd)
+    expect(svg.indexOf('fill="#123456"')).toBeGreaterThan(svg.lastIndexOf('fill="#ffd0ad"'))
   })
 })

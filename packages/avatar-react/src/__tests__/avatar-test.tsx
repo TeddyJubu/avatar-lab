@@ -116,6 +116,14 @@ describe('@bible-strong/avatar-react', () => {
     expect(svg.querySelectorAll(':scope > path')).toHaveLength(37)
     const groups = [...svg.querySelectorAll(':scope > g')]
     expect(groups).toHaveLength(3)
+    const layers = [...svg.children]
+    const headPath = svg.querySelector('clipPath path')!.getAttribute('d')
+    const head = layers.find(
+      layer => layer.tagName === 'path' && layer.getAttribute('d') === headPath
+    )!
+    expect(layers.indexOf(groups[0]!)).toBeLessThan(layers.indexOf(head))
+    expect(layers.indexOf(head)).toBeLessThan(layers.indexOf(groups[1]!))
+    expect(layers.at(-1)).toBe(groups[2])
     const mouth = [...groups[1]!.querySelectorAll('path')].slice(2)
     expect(mouth.filter(path => path.getAttribute('d'))).toHaveLength(2)
     expect(mouth[0]!.getAttribute('fill')).toBe(definition.colors.eyes)

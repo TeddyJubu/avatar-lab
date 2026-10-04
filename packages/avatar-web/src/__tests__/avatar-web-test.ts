@@ -50,6 +50,14 @@ describe('@bible-strong/avatar-web', () => {
     expect(groups).toHaveLength(3)
     const [whiskersBehind, eyes, whiskersInFront] = [...groups]
     expect(eyes!.getAttribute('clip-path')).toMatch(/^url\(#/)
+    const layers = [...svg.children]
+    const headPath = svg.querySelector('clipPath path')!.getAttribute('d')
+    const head = layers.find(
+      layer => layer.tagName === 'path' && layer.getAttribute('d') === headPath
+    )!
+    expect(layers.indexOf(whiskersBehind!)).toBeLessThan(layers.indexOf(head))
+    expect(layers.indexOf(head)).toBeLessThan(layers.indexOf(eyes!))
+    expect(layers.at(-1)).toBe(whiskersInFront)
     const mouth = [...eyes!.querySelectorAll('path')].slice(2)
     expect(mouth).toHaveLength(3)
     expect(mouth.filter(path => path.getAttribute('d'))).toHaveLength(2)

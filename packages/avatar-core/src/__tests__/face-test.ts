@@ -1,7 +1,9 @@
 import {
   expressionFromDefinition,
+  interpolatePose,
   parseAvatarDefinition,
   playAvatarAnimation,
+  poseFromExpression,
   renderAvatarDefinition,
   sampleAvatarFrame,
   validateAvatarDefinition,
@@ -166,6 +168,22 @@ describe('face features', () => {
     expect(frame.expression.mouthCurve).toBeCloseTo(6, 5)
     expect(frame.expression.mouthOpen).toBeCloseTo(5, 5)
     expect(frame.expression.whiskerAngle).toBeCloseTo(6, 5)
+  })
+
+  it('interpolates mouth tilt and whisker angle the short way round', () => {
+    const from = poseFromExpression({
+      ...expressionFromDefinition('neutral', expression, definition.face),
+      mouthTilt: 170,
+      whiskerAngle: -170,
+    })
+    const to = poseFromExpression({
+      ...expressionFromDefinition('neutral', expression, definition.face),
+      mouthTilt: -170,
+      whiskerAngle: 170,
+    })
+    const halfway = interpolatePose(from, to, 0.5).expression
+    expect(Math.abs(halfway.mouthTilt!)).toBeCloseTo(180, 5)
+    expect(Math.abs(halfway.whiskerAngle!)).toBeCloseTo(180, 5)
   })
 
   it('keeps avatars without a face unchanged', () => {

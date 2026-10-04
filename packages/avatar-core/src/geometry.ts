@@ -557,7 +557,9 @@ export const interpolatePose = (from: AvatarPose, to: AvatarPose, progress: numb
       if (end !== undefined) expression[field] = end
       return
     }
-    expression[field] = start + (end - start) * progress
+    const target =
+      field === 'mouthTilt' || field === 'whiskerAngle' ? nearestEquivalentAngle(end, start) : end
+    expression[field] = start + (target - start) * progress
   })
   return {
     expression,
