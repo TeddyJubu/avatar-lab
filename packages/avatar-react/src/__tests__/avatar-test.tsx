@@ -102,6 +102,39 @@ describe('@bible-strong/avatar-react', () => {
     expect(svg?.querySelectorAll(':scope > path')).toHaveLength(37)
   })
 
+  it('renders mouth and whisker slots only for definitions with a face', () => {
+    const withFace = {
+      ...definition,
+      face: {
+        mouth: { thickness: 3, x: 0, y: 48, width: 22, curve: 4, cat: 1 },
+        whiskers: { count: 3, thickness: 2, x: 70, y: 40, length: 40, color: '#ffffff' },
+      },
+    } satisfies AvatarDefinition
+    const view = render(<Avatar definition={withFace} ariaLabel="Kitten" />)
+    const svg = view.getByRole('img', { name: 'Kitten' }).querySelector('svg')!
+
+    expect(svg.querySelectorAll(':scope > path')).toHaveLength(37)
+    const groups = [...svg.querySelectorAll(':scope > g')]
+    expect(groups).toHaveLength(3)
+    const layers = [...svg.children]
+    const headPath = svg.querySelector('clipPath path')!.getAttribute('d')
+    const head = layers.find(
+      layer => layer.tagName === 'path' && layer.getAttribute('d') === headPath
+    )!
+    expect(layers.indexOf(groups[0]!)).toBeLessThan(layers.indexOf(head))
+    expect(layers.indexOf(head)).toBeLessThan(layers.indexOf(groups[1]!))
+    expect(layers.at(-1)).toBe(groups[2])
+    const mouth = [...groups[1]!.querySelectorAll('path')].slice(2)
+    expect(mouth.filter(path => path.getAttribute('d'))).toHaveLength(2)
+    expect(mouth[0]!.getAttribute('fill')).toBe(definition.colors.eyes)
+    const front = [...groups[2]!.querySelectorAll('path')]
+    expect(front.filter(path => path.getAttribute('d'))).toHaveLength(6)
+    expect(front[0]!.getAttribute('fill')).toBe('#ffffff')
+
+    view.rerender(<Avatar definition={definition} ariaLabel="Kitten" />)
+    expect(svg.querySelectorAll(':scope > g')).toHaveLength(1)
+  })
+
   it('exposes semantic imperative controls without Studio identifiers', () => {
     const controller = createRef<AvatarController>()
     render(<Avatar definition={definition} ref={controller} />)

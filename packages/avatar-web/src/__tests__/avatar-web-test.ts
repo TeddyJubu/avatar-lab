@@ -34,6 +34,42 @@ describe('@bible-strong/avatar-web', () => {
     expect(document.querySelector('#avatar svg')).toBeNull()
   })
 
+  it('paints a mouth with the eyes and whiskers around the head when the face defines them', () => {
+    const definition = structuredClone(definitionJson) as typeof definitionJson & {
+      face?: unknown
+    }
+    definition.face = {
+      mouth: { thickness: 3, x: 0, y: 48, width: 22, curve: 4, cat: 1, color: '#aa3355' },
+      whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40 },
+    }
+    const avatar = createAvatar('#avatar', { definition, defaultExpression: 'neutral' })
+    const svg = document.querySelector('#avatar svg')!
+
+    expect(svg.querySelectorAll(':scope > path')).toHaveLength(37)
+    const groups = svg.querySelectorAll(':scope > g')
+    expect(groups).toHaveLength(3)
+    const [whiskersBehind, eyes, whiskersInFront] = [...groups]
+    expect(eyes!.getAttribute('clip-path')).toMatch(/^url\(#/)
+    const layers = [...svg.children]
+    const headPath = svg.querySelector('clipPath path')!.getAttribute('d')
+    const head = layers.find(
+      layer => layer.tagName === 'path' && layer.getAttribute('d') === headPath
+    )!
+    expect(layers.indexOf(whiskersBehind!)).toBeLessThan(layers.indexOf(head))
+    expect(layers.indexOf(head)).toBeLessThan(layers.indexOf(eyes!))
+    expect(layers.at(-1)).toBe(whiskersInFront)
+    const mouth = [...eyes!.querySelectorAll('path')].slice(2)
+    expect(mouth).toHaveLength(3)
+    expect(mouth.filter(path => path.getAttribute('d'))).toHaveLength(2)
+    expect(mouth[0]!.getAttribute('fill')).toBe('#aa3355')
+    expect(whiskersBehind!.querySelectorAll('path')).toHaveLength(8)
+    const front = [...whiskersInFront!.querySelectorAll('path')]
+    expect(front.filter(path => path.getAttribute('d'))).toHaveLength(4)
+    expect(front[0]!.getAttribute('fill')).toBe(definitionJson.colors.eyes)
+
+    avatar.destroy()
+  })
+
   it('returns typed errors for unknown targets', () => {
     const avatar = createAvatar('#avatar', { definition: definitionJson })
 

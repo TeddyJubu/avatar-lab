@@ -51,6 +51,11 @@ This copy-on-write model lets multiple avatars share the defaults without accide
 The selected avatar and animations are stored in one portable `.avatar.json` definition. React and
 JavaScript use this exact same file, so visual behavior does not diverge between renderers.
 
+Definitions may also carry an optional `face` with a mouth and whiskers. Expressions animate them
+through `mouth` and `whiskers` overrides, and the React, web and MCP SVG renderers draw them. The
+Studio does not edit them yet, so author them with the MCP tools or by hand; importing such a
+definition into the Studio keeps everything except the face.
+
 ### React / TypeScript
 
 Install `@bible-strong/avatar-react`, import the JSON and pass it to `createAvatar`. The React

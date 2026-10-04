@@ -2,14 +2,49 @@ import type {
   AvatarBodyDefinition,
   AvatarDefinition,
   AvatarExpressionDefinition,
+  AvatarFaceDefinition,
   ExpressionKey,
 } from './avatarDefinition'
 import type { AvatarBody } from './body'
-import { poseFromExpression, renderAvatar, type AvatarGeometry, type Expression } from './geometry'
+import {
+  DEFAULT_WHISKER_SPREAD,
+  poseFromExpression,
+  renderAvatar,
+  type AvatarGeometry,
+  type Expression,
+  type FaceExpressionField,
+} from './geometry'
+
+/** Animatable face values for an expression: the definition's face with its overrides applied. */
+export const faceExpressionValues = (
+  face: Readonly<AvatarFaceDefinition> | undefined,
+  expression: Readonly<AvatarExpressionDefinition>
+): Partial<Record<FaceExpressionField, number>> => {
+  const values: Partial<Record<FaceExpressionField, number>> = {}
+  if (face?.mouth) {
+    const mouth = { ...face.mouth, ...expression.mouth }
+    values.mouthX = mouth.x
+    values.mouthY = mouth.y
+    values.mouthWidth = mouth.width
+    values.mouthCurve = mouth.curve
+    values.mouthCat = mouth.cat ?? 0
+    values.mouthOpen = mouth.open ?? 0
+    values.mouthTilt = mouth.tilt ?? 0
+  }
+  if (face?.whiskers) {
+    const whiskers = { ...face.whiskers, ...expression.whiskers }
+    values.whiskerLength = whiskers.length
+    values.whiskerAngle = whiskers.angle ?? 0
+    values.whiskerSpread = whiskers.spread ?? DEFAULT_WHISKER_SPREAD
+    values.whiskerCurve = whiskers.curve ?? 0
+  }
+  return values
+}
 
 export const expressionFromDefinition = (
   key: ExpressionKey,
-  expression: AvatarExpressionDefinition
+  expression: AvatarExpressionDefinition,
+  face?: Readonly<AvatarFaceDefinition>
 ): Expression => ({
   id: key,
   semanticKey: key,
@@ -32,6 +67,7 @@ export const expressionFromDefinition = (
   bodyMotion: expression.motion.body,
   ...(expression.colors?.body ? { bodyColor: expression.colors.body } : {}),
   ...(expression.colors?.eyes ? { eyeColor: expression.colors.eyes } : {}),
+  ...faceExpressionValues(face, expression),
 })
 
 export const bodyFromDefinition = (body: AvatarBodyDefinition): AvatarBody => ({
@@ -47,7 +83,8 @@ export const bodyFromDefinition = (body: AvatarBodyDefinition): AvatarBody => ({
 
 export type AvatarScene = {
   geometry: AvatarGeometry
-  colors: { body: string; eyes: string }
+  /** `mouth` and `whiskers` are present only for avatars that define those features. */
+  colors: { body: string; eyes: string; mouth?: string; whiskers?: string }
 }
 
 export const renderAvatarExpression = (
@@ -57,13 +94,18 @@ export const renderAvatarExpression = (
   blink = 1
 ): AvatarScene => {
   const body = bodyFromDefinition(definition.body)
+  const face = definition.face
+  const eyes = colors.eyes ?? expression.eyeColor ?? definition.colors.eyes
   return {
     geometry: renderAvatar(poseFromExpression(expression), body.primary, blink, {
       bodyNodes: body.nodes,
+      ...(face ? { face } : {}),
     }),
     colors: {
       body: colors.body ?? expression.bodyColor ?? definition.colors.body,
-      eyes: colors.eyes ?? expression.eyeColor ?? definition.colors.eyes,
+      eyes,
+      ...(face?.mouth ? { mouth: face.mouth.color ?? eyes } : {}),
+      ...(face?.whiskers ? { whiskers: face.whiskers.color ?? eyes } : {}),
     },
   }
 }
@@ -74,6 +116,6 @@ export const renderAvatarDefinition = (
 ): AvatarScene => {
   const publicExpression = definition.expressions[expressionKey]
   if (!publicExpression) throw new Error(`Unknown expression '${expressionKey}'`)
-  const expression = expressionFromDefinition(expressionKey, publicExpression)
+  const expression = expressionFromDefinition(expressionKey, publicExpression, definition.face)
   return renderAvatarExpression(definition, expression, publicExpression.colors)
 }

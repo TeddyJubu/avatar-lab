@@ -75,6 +75,11 @@ go beyond editing avatars), make the change, push it, then `update` the request 
   those animations use.
 - Custom expressions start from `basedOn` and override only what you give. Custom animations may
   reference bundled expressions; they are added automatically.
+- Animals and characters can have a mouth and whiskers: add `face` to the spec (or the `set_face`
+  edit), for example `{ "mouth": { "thickness": 3, "x": 0, "y": 50, "width": 22, "curve": 4,
+"cat": 1 }, "whiskers": { "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44 } }`,
+  then give expressions `mouth`/`whiskers` overrides (`{ "curve": 8, "open": 6 }`,
+  `{ "angle": 12 }`) so animations move them. The authoring guide lists every field.
 - Keys are lowercase kebab-case. Colors are `#rrggbb`.
 
 ## Handing off

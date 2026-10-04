@@ -2,6 +2,7 @@ import {
   advanceAvatarPlayback,
   createAvatarPlaybackState,
   MAX_BODY_NODES,
+  MAX_WHISKERS_PER_SIDE,
   pauseAvatarPlayback,
   playAvatarAnimation,
   renderAvatarDefinition,
@@ -50,6 +51,9 @@ export type CreateAvatarOptions = {
 const svgNamespace = 'http://www.w3.org/2000/svg'
 const controlledExpressionTransitionMs = 420
 const bodyPathSlots = MAX_BODY_NODES + 2
+/** Two stroked halves of the mouth line plus its opening. */
+const mouthPathSlots = 3
+const whiskerPathSlots = MAX_WHISKERS_PER_SIDE * 2
 let avatarInstanceId = 0
 
 const dimension = (size: number | string) => (typeof size === 'number' ? `${size}px` : size)
@@ -135,9 +139,26 @@ export function createAvatar(
   eyeGroup.setAttribute('clip-path', `url(#${clipId})`)
   const leftPath = createSvgElement('path')
   const rightPath = createSvgElement('path')
-  eyeGroup.append(leftPath, rightPath)
+  const mouthPaths = Array.from({ length: definition.face?.mouth ? mouthPathSlots : 0 }, () =>
+    createSvgElement('path')
+  )
+  eyeGroup.append(leftPath, rightPath, ...mouthPaths)
   const frontPaths = Array.from({ length: bodyPathSlots }, () => createSvgElement('path'))
-  svg.append(...backPaths, headPath, eyeGroup, ...frontPaths)
+  const whiskerSlots = definition.face?.whiskers ? whiskerPathSlots : 0
+  const whiskerBackGroup = createSvgElement('g')
+  const whiskerBackPaths = Array.from({ length: whiskerSlots }, () => createSvgElement('path'))
+  whiskerBackGroup.append(...whiskerBackPaths)
+  const whiskerFrontGroup = createSvgElement('g')
+  const whiskerFrontPaths = Array.from({ length: whiskerSlots }, () => createSvgElement('path'))
+  whiskerFrontGroup.append(...whiskerFrontPaths)
+  svg.append(
+    ...(whiskerSlots ? [whiskerBackGroup] : []),
+    ...backPaths,
+    headPath,
+    eyeGroup,
+    ...frontPaths,
+    ...(whiskerSlots ? [whiskerFrontGroup] : [])
+  )
   host.append(svg)
   mount.append(host)
 
@@ -162,6 +183,20 @@ export function createAvatar(
     frontPaths.forEach((element, index) => {
       element.setAttribute('d', scene.geometry.frontPaths[index] ?? '')
       element.setAttribute('fill', scene.colors.body)
+    })
+    const mouthColor = scene.colors.mouth ?? scene.colors.eyes
+    mouthPaths.forEach((element, index) => {
+      element.setAttribute('d', scene.geometry.mouthPaths[index] ?? '')
+      element.setAttribute('fill', mouthColor)
+    })
+    const whiskerColor = scene.colors.whiskers ?? scene.colors.eyes
+    whiskerBackPaths.forEach((element, index) => {
+      element.setAttribute('d', scene.geometry.whiskerBackPaths[index] ?? '')
+      element.setAttribute('fill', whiskerColor)
+    })
+    whiskerFrontPaths.forEach((element, index) => {
+      element.setAttribute('d', scene.geometry.whiskerFrontPaths[index] ?? '')
+      element.setAttribute('fill', whiskerColor)
     })
   }
 

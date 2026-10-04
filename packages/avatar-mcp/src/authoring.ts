@@ -6,6 +6,11 @@ import {
   type AvatarDefinition,
   type AvatarDefinitionError,
   type AvatarExpressionDefinition,
+  type AvatarFaceDefinition,
+  type AvatarMouthDefinition,
+  type AvatarMouthShapeDefinition,
+  type AvatarWhiskerPoseDefinition,
+  type AvatarWhiskersDefinition,
   type BodyNodeSurfaceType,
   type HexColor,
   type SurfaceDefinition,
@@ -48,6 +53,19 @@ export type ExpressionSpec = {
   motion?: Partial<AvatarExpressionDefinition['motion']>
   /** Temporary color overrides while the expression is shown. `null` removes inherited overrides. */
   colors?: Partial<Record<'body' | 'eyes', string>> | null
+  /** Mouth values while the expression is shown, merged over the inherited ones. `null` clears. */
+  mouth?: Partial<AvatarMouthShapeDefinition> | null
+  /** Whisker values while the expression is shown, merged over the inherited ones. `null` clears. */
+  whiskers?: Partial<AvatarWhiskerPoseDefinition> | null
+}
+
+export type MouthSpec = Partial<Omit<AvatarMouthDefinition, 'color'>> & { color?: string }
+export type WhiskersSpec = Partial<Omit<AvatarWhiskersDefinition, 'color'>> & { color?: string }
+
+/** Mouth and whiskers. New features need their required fields; edits merge into existing ones. */
+export type FaceSpec = {
+  mouth?: MouthSpec
+  whiskers?: WhiskersSpec
 }
 
 export type AnimationStepSpec = {
@@ -92,6 +110,8 @@ export type AvatarSpec = {
   }
   /** Neutral eye overrides; inherited expressions shift with them, like in the Studio. */
   neutralEyes?: EyesSpec
+  /** Optional mouth and whiskers; expressions animate them with `mouth`/`whiskers` overrides. */
+  face?: FaceSpec
   behavior?: BehaviorSpec
 }
 
@@ -220,7 +240,69 @@ const resolveExpression = (
       ])
     )
   }
+  const mouth = spec.mouth === null ? undefined : { ...base.mouth, ...(spec.mouth ?? {}) }
+  if (mouth && Object.keys(mouth).length) result.mouth = mouth
+  const whiskers =
+    spec.whiskers === null ? undefined : { ...base.whiskers, ...(spec.whiskers ?? {}) }
+  if (whiskers && Object.keys(whiskers).length) result.whiskers = whiskers
   return result
+}
+
+const REQUIRED_FACE_FIELDS = {
+  mouth: ['thickness', 'x', 'y', 'width', 'curve'],
+  whiskers: ['count', 'thickness', 'x', 'y', 'length'],
+} as const
+
+const listFields = (fields: readonly string[]) =>
+  `${fields.slice(0, -1).join(', ')} and ${fields.at(-1)}`
+
+/** Merges a face feature spec into the current one; `null` removes the feature. */
+const mergeFaceFeature = <T extends { color?: string }>(
+  feature: keyof typeof REQUIRED_FACE_FIELDS,
+  current: Readonly<T> | undefined,
+  spec: (Partial<Omit<T, 'color'>> & { color?: string }) | null | undefined,
+  path: string
+): T | undefined => {
+  if (spec === null) return undefined
+  if (spec === undefined) return current ? clone(current) : undefined
+  if (!current) {
+    const required = REQUIRED_FACE_FIELDS[feature]
+    const missing = required.filter(field => (spec as Record<string, unknown>)[field] === undefined)
+    if (missing.length) {
+      throw authoringError(
+        path,
+        'missing_face_fields',
+        `${feature === 'mouth' ? 'A new mouth needs' : 'New whiskers need'} ${listFields(required)}; missing ${missing.join(', ')}`
+      )
+    }
+  }
+  const merged = { ...clone(current ?? ({} as T)), ...spec } as T
+  if (spec.color !== undefined) merged.color = normalizeColor(spec.color, `${path}/color`)
+  return merged
+}
+
+const resolveFace = (
+  current: Readonly<AvatarFaceDefinition> | undefined,
+  spec: {
+    mouth?: MouthSpec | null
+    whiskers?: WhiskersSpec | null
+  },
+  path: string
+): AvatarFaceDefinition | undefined => {
+  const mouth = mergeFaceFeature<AvatarMouthDefinition>(
+    'mouth',
+    current?.mouth,
+    spec.mouth,
+    `${path}/mouth`
+  )
+  const whiskers = mergeFaceFeature<AvatarWhiskersDefinition>(
+    'whiskers',
+    current?.whiskers,
+    spec.whiskers,
+    `${path}/whiskers`
+  )
+  if (!mouth && !whiskers) return undefined
+  return { ...(mouth ? { mouth } : {}), ...(whiskers ? { whiskers } : {}) }
 }
 
 export const DEFAULT_STEP = { holdMs: 1600, transitionMs: 420, transition: 'smooth' } as const
@@ -371,6 +453,8 @@ export const createAvatarFromSpec = (spec: AvatarSpec = {}): AuthoringResult<Ava
       animations: {},
       animationOrder: [],
     }
+    const face = spec.face ? resolveFace(undefined, spec.face, '/face') : undefined
+    if (face) definition.face = face
 
     base.expressionOrder
       .filter(key => inheritedExpressions.has(key))
@@ -433,6 +517,7 @@ export type AvatarEditOperation =
   | { op: 'remove_animation'; key: string }
   | { op: 'reorder_expressions'; order: string[] }
   | { op: 'reorder_animations'; order: string[] }
+  | { op: 'set_face'; mouth?: MouthSpec | null; whiskers?: WhiskersSpec | null }
 
 const reorder = (current: string[], requested: string[], path: string) => {
   requested.forEach((key, index) => {
@@ -576,6 +661,12 @@ const applyOperation = (
         operation.order,
         `${path}/order`
       )
+      return
+    case 'set_face': {
+      const face = resolveFace(definition.face, operation, path)
+      if (face) definition.face = face
+      else delete definition.face
+    }
   }
 }
 
@@ -698,20 +789,39 @@ export const generateAvatarVariations = ({
   })
 }
 
-export const describeAvatar = (definition: Readonly<AvatarDefinition>) => ({
-  name: definition.name ?? null,
-  colors: definition.colors,
-  body: {
-    primary: definition.body.primary.type,
-    nodes: definition.body.nodes.map(node => node.surface.type),
-  },
-  expressions: definition.expressionOrder,
-  animations: definition.animationOrder.map(key => ({
-    key,
-    playbackMode: definition.animations[key]!.playbackMode,
-    steps: definition.animations[key]!.steps.map(step => step.expression),
-    ...(definition.animations[key]!.metadata?.label
-      ? { label: definition.animations[key]!.metadata!.label }
-      : {}),
-  })),
-})
+/** Expressions whose mouth or whisker overrides have no face feature to animate. */
+export const faceWarnings = (definition: Readonly<AvatarDefinition>): string[] =>
+  (['mouth', 'whiskers'] as const).flatMap(feature => {
+    if (definition.face?.[feature]) return []
+    const keys = definition.expressionOrder.filter(key => definition.expressions[key]?.[feature])
+    if (!keys.length) return []
+    return [
+      `Expressions ${keys.join(', ')} override the ${feature}, but the avatar has no face.${feature}, so nothing is drawn; add one with set_face or remove the overrides`,
+    ]
+  })
+
+export const describeAvatar = (definition: Readonly<AvatarDefinition>) => {
+  const warnings = faceWarnings(definition)
+  return {
+    name: definition.name ?? null,
+    colors: definition.colors,
+    body: {
+      primary: definition.body.primary.type,
+      nodes: definition.body.nodes.map(node => node.surface.type),
+    },
+    face: {
+      mouth: Boolean(definition.face?.mouth),
+      whiskers: definition.face?.whiskers?.count ?? 0,
+    },
+    expressions: definition.expressionOrder,
+    animations: definition.animationOrder.map(key => ({
+      key,
+      playbackMode: definition.animations[key]!.playbackMode,
+      steps: definition.animations[key]!.steps.map(step => step.expression),
+      ...(definition.animations[key]!.metadata?.label
+        ? { label: definition.animations[key]!.metadata!.label }
+        : {}),
+    })),
+    ...(warnings.length ? { warnings } : {}),
+  }
+}

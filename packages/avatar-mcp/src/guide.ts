@@ -5,7 +5,8 @@ import { baseBehaviorDefinition, characterTemplates } from './templates'
 export const authoringGuide = () => `# Bible Strong avatar authoring guide
 
 An avatar is one portable \`.avatar.json\` definition (schema \`bible-strong/avatar-definition\`, v1).
-It holds a body, two colors, named expressions and named animations. The same file drives
+It holds a body, two colors, an optional mouth and whiskers, named expressions and named
+animations. The same file drives
 \`@bible-strong/avatar-react\`, \`@bible-strong/avatar-web\` and \`@bible-strong/avatar-core\`.
 
 ## Recommended workflow
@@ -48,6 +49,30 @@ range from 0 to 2.
 - Custom expressions start from \`basedOn\` (any existing or bundled expression, default
   \`neutral\`) and override only what you specify. Squint: lower eye height. Surprise: taller,
   wider eyes. Anger/sadness: opposite eye angles. Looking aside: head y plus eye x.
+
+## Mouth and whiskers
+
+An avatar can add an optional \`face\` with a \`mouth\` and \`whiskers\`, drawn in the eye color unless
+they set their own \`color\`. Both live in the same facial frame as the eyes (y grows downward;
+the eyes sit near y 0, the chin near y 100 on the default sphere).
+
+- \`mouth\`: \`thickness\`, center \`x\`/\`y\`, \`width\` (0 hides it), \`curve\` (how far the middle
+  bows below the corners: positive smiles, negative frowns), \`cat\` (0 single curve, 1 cat "ω"
+  with two lobes), \`open\` (depth of the opening, 0 closed) and \`tilt\` in degrees. Example:
+  \`{ "thickness": 3, "x": 0, "y": 50, "width": 22, "curve": 4, "cat": 1 }\`.
+- \`whiskers\`: \`count\` per side (1–4), root \`thickness\` (tips taper), right-hand root \`x\`/\`y\`
+  (mirrored on the left), vertical \`gap\` between roots, \`length\` (0 hides them), \`angle\` of
+  the whole fan in degrees (positive raises the tips), \`spread\` in degrees between neighbouring
+  whiskers and tip \`curve\` (droop).
+  Example: \`{ "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44, "spread": 10 }\`.
+- Expressions animate them with partial overrides that transitions interpolate:
+  \`"mouth": { "curve": 8, "open": 6 }\`, \`"whiskers": { "angle": 12, "spread": 16 }\`. Smile:
+  higher curve. Laugh or meow: add open. Surprise: small width, curve 0, open. Sad: negative
+  curve with drooping whiskers (negative angle, positive curve). Smirk: tilt.
+- Set them with the spec's \`face\`, change them with the \`set_face\` edit (merges; \`null\`
+  removes a feature), and override them per expression with \`mouth\`/\`whiskers\` in an
+  expression spec (\`null\` clears inherited overrides).
+- Whiskers stick out past the head, so keep root \`x\` + \`length\` within the ±140 frame.
 
 ## Animations
 

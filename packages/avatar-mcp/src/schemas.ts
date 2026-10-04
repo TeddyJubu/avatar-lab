@@ -55,6 +55,62 @@ export const eyesSpecSchema = z
   })
   .describe('Shared eye fields apply to both eyes; left/right override per eye')
 
+const mouthShapeFields = {
+  x: z.number().optional().describe('Center of the mouth line in the facial frame'),
+  y: z.number().optional().describe('Positive y is lower on the face; the eyes sit near 0'),
+  width: z.number().min(0).max(400).optional().describe('Corner to corner; 0 hides the mouth'),
+  curve: z
+    .number()
+    .min(-200)
+    .max(200)
+    .optional()
+    .describe('How far the middle bows below the corners: + smile, - frown'),
+  cat: z.number().min(0).max(1).optional().describe('0 single curve, 1 cat "ω" with two lobes'),
+  open: z.number().min(0).max(200).optional().describe('Depth of the opening; 0 is closed'),
+  tilt: z.number().min(-180).max(180).optional().describe('Rotation in degrees, for smirks'),
+}
+
+const whiskerPoseFields = {
+  length: z.number().min(0).max(400).optional().describe('0 hides the whiskers'),
+  angle: z.number().min(-180).max(180).optional().describe('Fan rotation; + raises the tips'),
+  spread: z.number().min(-90).max(90).optional().describe('Degrees between neighbouring whiskers'),
+  curve: z.number().min(-200).max(200).optional().describe('Tip droop (+) or curl up (-)'),
+}
+
+export const mouthShapeSchema = z
+  .object(mouthShapeFields)
+  .describe('Mouth values to override while the expression is shown')
+
+export const whiskerPoseSchema = z
+  .object(whiskerPoseFields)
+  .describe('Whisker values to override while the expression is shown')
+
+export const mouthSchema = z
+  .object({
+    ...mouthShapeFields,
+    thickness: z.number().min(0.2).max(40).optional().describe('Line thickness'),
+    color: color.optional().describe('Defaults to the eye color'),
+  })
+  .describe(
+    'Mouth painted on the face. A new mouth needs thickness, x, y, width and curve; edits merge'
+  )
+
+export const whiskersSchema = z
+  .object({
+    ...whiskerPoseFields,
+    count: z.number().int().min(1).max(4).optional().describe('Whiskers per side'),
+    thickness: z.number().min(0.2).max(20).optional().describe('Root thickness; tips taper'),
+    x: z.number().optional().describe('Root of the right-hand whiskers; the left is mirrored'),
+    y: z.number().optional(),
+    gap: z.number().min(0).max(100).optional().describe('Vertical distance between roots'),
+    color: color.optional().describe('Defaults to the eye color'),
+  })
+  .describe('Whiskers rooted on the cheeks. New whiskers need count, thickness, x, y and length')
+
+export const faceSpecSchema = z
+  .object({ mouth: mouthSchema.optional(), whiskers: whiskersSchema.optional() })
+  .describe('Optional mouth and whiskers, animated by expression mouth/whiskers overrides')
+
 export const expressionSpecSchema = z.object({
   basedOn: semanticKey.optional().describe('Expression to start from (default: neutral)'),
   head: z
@@ -74,6 +130,8 @@ export const expressionSpecSchema = z.object({
     .nullable()
     .optional()
     .describe('Temporary color overrides; null removes inherited overrides'),
+  mouth: mouthShapeSchema.nullable().optional().describe('null removes inherited overrides'),
+  whiskers: whiskerPoseSchema.nullable().optional().describe('null removes inherited overrides'),
 })
 
 export const animationSpecSchema = z.object({
@@ -137,6 +195,7 @@ export const avatarSpecSchema = z.object({
     })
     .optional(),
   neutralEyes: eyesSpecSchema.optional(),
+  face: faceSpecSchema.optional(),
   behavior: behaviorSpecSchema.optional(),
 })
 
@@ -171,6 +230,14 @@ export const editOperationSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('remove_animation'), key: semanticKey }),
   z.object({ op: z.literal('reorder_expressions'), order: z.array(semanticKey) }),
   z.object({ op: z.literal('reorder_animations'), order: z.array(semanticKey) }),
+  z.object({
+    op: z.literal('set_face'),
+    mouth: mouthSchema.nullable().optional().describe('Merged into the mouth; null removes it'),
+    whiskers: whiskersSchema
+      .nullable()
+      .optional()
+      .describe('Merged into the whiskers; null removes them'),
+  }),
 ])
 
 export const backgroundSchema = z

@@ -21,6 +21,27 @@ describe('studioAvatarFromDefinition', () => {
     expect(() => studioAvatarFromDefinition({ schema: 'bible-strong/avatar-definition' })).toThrow()
   })
 
+  it('imports a definition with a mouth and whiskers, leaving the face behind', () => {
+    const withFace = {
+      ...structuredClone(strobi),
+      face: {
+        mouth: { thickness: 3, x: 0, y: 48, width: 22, curve: 4, cat: 1 },
+        whiskers: { count: 2, thickness: 2, x: 70, y: 40, length: 40 },
+      },
+      expressions: {
+        ...structuredClone(strobi.expressions),
+        'joyful-wide': { ...strobi.expressions['joyful-wide'], mouth: { open: 8 } },
+      },
+    }
+    const { avatar, expressions, sequences } = studioAvatarFromDefinition(withFace)
+    const result = createAvatarDefinition({ avatar, behavior: { expressions, sequences } })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect('face' in result.value).toBe(false)
+    expect(result.value.expressions['joyful-wide']).not.toHaveProperty('mouth')
+    expect(result.value.expressionOrder).toEqual(strobi.expressionOrder)
+  })
+
   it('round-trips back to the same definition', () => {
     const { avatar, expressions, sequences } = studioAvatarFromDefinition(strobi)
 
