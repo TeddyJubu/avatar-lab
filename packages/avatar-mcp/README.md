@@ -13,7 +13,7 @@ be imported into the Studio.
 As a Claude Code plugin (adds a design skill and an `/avatar-lab:avatar-set` command too):
 
 ```text
-/plugin marketplace add smontlouis/bible-strong-avatar-lab
+/plugin marketplace add TeddyJubu/avatar-lab
 /plugin install avatar-lab@bible-strong-avatar-lab
 ```
 

@@ -77,7 +77,7 @@ Claude Code users can install it as a plugin, which also adds an avatar design s
 `/avatar-lab:avatar-set` command:
 
 ```text
-/plugin marketplace add smontlouis/bible-strong-avatar-lab
+/plugin marketplace add TeddyJubu/avatar-lab
 /plugin install avatar-lab@bible-strong-avatar-lab
 ```
 
