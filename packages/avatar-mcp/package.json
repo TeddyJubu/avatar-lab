@@ -1,5 +1,5 @@
 {
-  "name": "@bible-strong/avatar-mcp",
+  "name": "@teddyjubu/avatar-mcp",
   "version": "0.1.0",
   "description": "Model Context Protocol server that lets AI agents design, edit, validate and render Bible Strong procedural avatar sets.",
   "keywords": [
@@ -9,16 +9,19 @@
     "model-context-protocol",
     "ai-agents"
   ],
-  "author": "Stéphane Montlouis-Calixte",
+  "author": "TeddyJubu",
+  "contributors": [
+    "Stéphane Montlouis-Calixte (original Bible Strong Avatar Lab)"
+  ],
   "license": "AGPL-3.0-only",
-  "homepage": "https://github.com/smontlouis/bible-strong-avatar-lab#readme",
+  "homepage": "https://github.com/TeddyJubu/avatar-lab/tree/main/packages/avatar-mcp#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/smontlouis/bible-strong-avatar-lab.git",
+    "url": "git+https://github.com/TeddyJubu/avatar-lab.git",
     "directory": "packages/avatar-mcp"
   },
   "bugs": {
-    "url": "https://github.com/smontlouis/bible-strong-avatar-lab/issues"
+    "url": "https://github.com/TeddyJubu/avatar-lab/issues"
   },
   "type": "module",
   "sideEffects": false,

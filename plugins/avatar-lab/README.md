@@ -3,6 +3,10 @@
 Design, edit, validate and render Bible Strong procedural SVG avatars, one at a time or as whole
 sets, directly from Claude Code.
 
+Maintained by [TeddyJubu](https://github.com/TeddyJubu/avatar-lab). Built on
+[Bible Strong Avatar Lab](https://github.com/smontlouis/bible-strong-avatar-lab) by Stéphane
+Montlouis-Calixte.
+
 ## Install
 
 ```text
@@ -35,7 +39,7 @@ npm install --global @resvg/resvg-js
 ```
 
 Alternatively, run the npm package, which installs it automatically:
-`claude mcp add avatar-lab -- npx -y @bible-strong/avatar-mcp`.
+`claude mcp add avatar-lab -- npx -y @teddyjubu/avatar-mcp`.
 
 ## Development
 

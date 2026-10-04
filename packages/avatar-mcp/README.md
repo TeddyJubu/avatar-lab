@@ -1,4 +1,4 @@
-# @bible-strong/avatar-mcp
+# @teddyjubu/avatar-mcp
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that lets any MCP-capable agent
 (Claude Code, Claude Desktop, Cursor, VS Code, custom Agent SDK apps…) design, edit, validate and
@@ -7,6 +7,10 @@ render Bible Strong procedural avatars, one at a time or as whole sets.
 Every avatar it produces is a validated `.avatar.json` definition that works with
 `@bible-strong/avatar-react`, `@bible-strong/avatar-web` and `@bible-strong/avatar-core`, and can
 be imported into the Studio.
+
+Maintained by [TeddyJubu](https://github.com/TeddyJubu/avatar-lab). Built on
+[Bible Strong Avatar Lab](https://github.com/smontlouis/bible-strong-avatar-lab) by Stéphane
+Montlouis-Calixte.
 
 ## Run it
 
@@ -20,14 +24,14 @@ As a Claude Code plugin (adds a design skill and an `/avatar-lab:avatar-set` com
 From npm, for any MCP client:
 
 ```sh
-npx -y @bible-strong/avatar-mcp --root ./my-avatars
+npx -y @teddyjubu/avatar-mcp --root ./my-avatars
 ```
 
 From this repository:
 
 ```sh
 pnpm install
-pnpm --filter @bible-strong/avatar-mcp build
+pnpm --filter @teddyjubu/avatar-mcp build
 node packages/avatar-mcp/dist/cli.js --root ./my-avatars
 ```
 
@@ -37,7 +41,7 @@ read and write must stay inside; it defaults to the current directory.
 ### Claude Code without the plugin
 
 ```sh
-claude mcp add avatar-lab -- npx -y @bible-strong/avatar-mcp
+claude mcp add avatar-lab -- npx -y @teddyjubu/avatar-mcp
 ```
 
 ### Claude Desktop, Cursor and other clients
@@ -47,7 +51,7 @@ claude mcp add avatar-lab -- npx -y @bible-strong/avatar-mcp
   "mcpServers": {
     "avatar-lab": {
       "command": "npx",
-      "args": ["-y", "@bible-strong/avatar-mcp", "--root", "/absolute/path/to/output"]
+      "args": ["-y", "@teddyjubu/avatar-mcp", "--root", "/absolute/path/to/output"]
     }
   }
 }
@@ -118,11 +122,7 @@ default) and the bundled behavior library.
 The authoring functions are framework-independent and exported for scripts:
 
 ```ts
-import {
-  createAvatarFromSpec,
-  editAvatarDefinition,
-  renderAvatarSvg,
-} from '@bible-strong/avatar-mcp'
+import { createAvatarFromSpec, editAvatarDefinition, renderAvatarSvg } from '@teddyjubu/avatar-mcp'
 
 const result = createAvatarFromSpec({ name: 'Nova', template: 'nova' })
 if (result.ok) console.log(renderAvatarSvg(result.value, { expression: 'joyful-wide' }))

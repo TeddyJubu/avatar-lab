@@ -8,9 +8,11 @@ The runtime is published as three public npm packages:
 
 All three packages keep the same version during the `0.x` stabilization period.
 
-`@bible-strong/avatar-mcp` is versioned independently. It provides the MCP server for AI agents
-and is the source of the bundled server in the `avatar-lab` Claude Code plugin. Semantic Versioning
-is applied as follows:
+`@teddyjubu/avatar-mcp` is versioned independently and published under the TeddyJubu npm account.
+It provides the MCP server for AI agents and is the source of the bundled server in the
+`avatar-lab` Claude Code plugin.
+
+Semantic Versioning is applied as follows:
 
 - a compatible fix increments the patch version (`0.1.0` to `0.1.1`);
 - a compatible feature increments the minor version (`0.1.0` to `0.2.0`);
@@ -42,24 +44,27 @@ pnpm packages:smoke
 Do not run `npm publish` from an individual package for routine releases. The initial `0.1.0`
 bootstrap publication is the only manual release.
 
-## Bootstrapping `@bible-strong/avatar-mcp`
+## Publishing `@teddyjubu/avatar-mcp`
 
-npm trusted publishing can only be configured for a package that already exists, so the first
-`@bible-strong/avatar-mcp` release is also manual. Do it before merging the package into `main`,
-otherwise the release workflow tries to publish `0.1.0` without credentials and fails:
+npm trusted publishing can only be configured for a package that already exists, so
+`@teddyjubu/avatar-mcp` is published with an npm token stored as a GitHub secret. Nobody needs the
+token locally, and it never has to be shared with an agent:
 
-```sh
-pnpm install
-pnpm --filter @bible-strong/avatar-mcp build
-cd packages/avatar-mcp
-npm publish --access public
-```
+1. On npmjs.com, signed in as the TeddyJubu account, open **Access Tokens → Generate New Token →
+   Granular Access Token**. Give it read and write access to packages (all packages until the first
+   release exists, then only `@teddyjubu/avatar-mcp`) and allow it to bypass two-factor
+   authentication for automation.
+2. On GitHub, open the `TeddyJubu/avatar-lab` repository → **Settings → Secrets and variables →
+   Actions → New repository secret**, name it `NPM_TOKEN` and paste the token.
+3. Merge into `main`. The release workflow publishes every unpublished version, starting with
+   `@teddyjubu/avatar-mcp@0.1.0`. Later releases follow the normal changeset flow above.
 
-Then add the `release.yml` workflow as a trusted publisher for the package on npmjs.com.
+Optionally, after the first release, add the `release.yml` workflow of `TeddyJubu/avatar-lab` as a
+trusted publisher for the package on npmjs.com and delete the token.
 
 ## Claude Code plugin
 
 The `avatar-lab` plugin under `plugins/avatar-lab` is distributed through the repository
 marketplace (`.claude-plugin/marketplace.json`), not npm. `pnpm version-packages` runs
-`pnpm plugin`, which copies the `@bible-strong/avatar-mcp` version into the plugin and marketplace
+`pnpm plugin`, which copies the `@teddyjubu/avatar-mcp` version into the plugin and marketplace
 manifests and regenerates the bundled server. `pnpm check` fails when they are stale.

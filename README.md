@@ -69,7 +69,7 @@ avatars and whole avatar sets from compact specs, edit them, validate them and r
 previews. It writes the same `.avatar.json` definitions as the Studio:
 
 ```bash
-pnpm --filter @bible-strong/avatar-mcp build
+pnpm --filter @teddyjubu/avatar-mcp build
 claude mcp add avatar-lab -- node "$PWD/packages/avatar-mcp/dist/cli.js" --root "$PWD/avatars"
 ```
 
