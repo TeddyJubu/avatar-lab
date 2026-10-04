@@ -1,0 +1,10 @@
+{
+  "name": "avatar-lab",
+  "version": "0.1.0",
+  "description": "Design, edit, validate and render Bible Strong procedural SVG avatars and whole avatar sets from Claude Code.",
+  "author": { "name": "Stéphane Montlouis-Calixte", "url": "https://github.com/smontlouis" },
+  "homepage": "https://avatars.bible-strong.app",
+  "repository": "https://github.com/smontlouis/bible-strong-avatar-lab",
+  "license": "AGPL-3.0-only",
+  "keywords": ["avatar", "svg", "animation", "mcp", "design"]
+}

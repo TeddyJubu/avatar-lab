@@ -73,8 +73,17 @@ pnpm --filter @bible-strong/avatar-mcp build
 claude mcp add avatar-lab -- node "$PWD/packages/avatar-mcp/dist/cli.js" --root "$PWD/avatars"
 ```
 
+Claude Code users can install it as a plugin, which also adds an avatar design skill and an
+`/avatar-lab:avatar-set` command:
+
+```text
+/plugin marketplace add smontlouis/bible-strong-avatar-lab
+/plugin install avatar-lab@bible-strong-avatar-lab
+```
+
 See [`packages/avatar-mcp/README.md`](./packages/avatar-mcp/README.md) for the tools and client
-configuration.
+configuration, and [`plugins/avatar-lab/README.md`](./plugins/avatar-lab/README.md) for the
+plugin.
 
 ### Photo Mode
 
@@ -110,6 +119,7 @@ Open [http://localhost:5173](http://localhost:5173).
 | `pnpm test:watch`   | Run Vitest in watch mode.                                                         |
 | `pnpm engine`       | Regenerate the standalone engine used by exported packages.                       |
 | `pnpm engine:check` | Verify that the committed generated engine is current.                            |
+| `pnpm plugin`       | Regenerate the Claude Code plugin's bundled MCP server and manifest versions.     |
 | `pnpm build`        | Regenerate the engine and create a production build in `dist/`.                   |
 | `pnpm preview`      | Serve the production build locally.                                               |
 | `pnpm format`       | Format the repository with Prettier.                                              |
@@ -169,6 +179,7 @@ Geometry, playback, document operations, and the standalone runtime remain frame
 | `src/i18n/`                              | Localized interface copy and translation tests.                          |
 | `src/lib/`                               | Small shared utilities without product-domain ownership.                 |
 | `packages/avatar-mcp/`                   | MCP server and authoring API for agent-created avatar sets.              |
+| `plugins/avatar-lab/`                    | Claude Code plugin: bundled MCP server, skill and command.               |
 | `scripts/generate-standalone-engine.mjs` | Standalone-engine generator.                                             |
 | `docs/adr/`                              | Accepted architecture decisions.                                         |
 | `legacy/`                                | Self-contained HTML prototypes that preceded the React application.      |

@@ -24,6 +24,7 @@ pnpm check
 - Add or update focused tests for domain behavior.
 - Run `pnpm typecheck` and the relevant test file while working, then `pnpm check` before committing.
 - `src/features/export/standaloneEngine.generated.ts` is generated. Update it with `pnpm engine`, never by hand.
+- `plugins/avatar-lab/server/avatar-mcp.mjs` and the plugin/marketplace versions are generated from `packages/avatar-mcp`. Update them with `pnpm plugin`, never by hand.
 - Keep English, French and Simplified Chinese copy synchronized across `src/i18n/index.ts` and `src/i18n/zh.ts`.
 - Preserve project JSON compatibility only with the current pre-release schema unless a migration is explicitly requested.
 

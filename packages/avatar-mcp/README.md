@@ -10,6 +10,19 @@ be imported into the Studio.
 
 ## Run it
 
+As a Claude Code plugin (adds a design skill and an `/avatar-lab:avatar-set` command too):
+
+```text
+/plugin marketplace add smontlouis/bible-strong-avatar-lab
+/plugin install avatar-lab@bible-strong-avatar-lab
+```
+
+From npm, for any MCP client:
+
+```sh
+npx -y @bible-strong/avatar-mcp --root ./my-avatars
+```
+
 From this repository:
 
 ```sh
@@ -21,10 +34,10 @@ node packages/avatar-mcp/dist/cli.js --root ./my-avatars
 The server talks over stdio. `--root` (or `AVATAR_MCP_ROOT`) sets the directory that every file
 read and write must stay inside; it defaults to the current directory.
 
-### Claude Code
+### Claude Code without the plugin
 
 ```sh
-claude mcp add avatar-lab -- node /absolute/path/to/avatar-lab/packages/avatar-mcp/dist/cli.js --root .
+claude mcp add avatar-lab -- npx -y @bible-strong/avatar-mcp
 ```
 
 ### Claude Desktop, Cursor and other clients
@@ -33,12 +46,8 @@ claude mcp add avatar-lab -- node /absolute/path/to/avatar-lab/packages/avatar-m
 {
   "mcpServers": {
     "avatar-lab": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/avatar-lab/packages/avatar-mcp/dist/cli.js",
-        "--root",
-        "/absolute/path/to/output"
-      ]
+      "command": "npx",
+      "args": ["-y", "@bible-strong/avatar-mcp", "--root", "/absolute/path/to/output"]
     }
   }
 }
@@ -119,7 +128,12 @@ const result = createAvatarFromSpec({ name: 'Nova', template: 'nova' })
 if (result.ok) console.log(renderAvatarSvg(result.value, { expression: 'joyful-wide' }))
 ```
 
-PNG output uses the optional `@resvg/resvg-js` dependency; without it, tools fall back to SVG.
+PNG output uses the optional `@resvg/resvg-js` dependency (also found in npm's global folder);
+without it, tools fall back to SVG.
+
+## License
+
+GNU Affero General Public License v3.0 only. See [LICENSE](./LICENSE).
 
 ## Templates
 

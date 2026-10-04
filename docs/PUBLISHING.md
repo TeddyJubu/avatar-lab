@@ -6,7 +6,10 @@ The runtime is published as three public npm packages:
 - `@bible-strong/avatar-react` depends on core and provides the React 19 integration;
 - `@bible-strong/avatar-web` depends on core and provides the direct DOM/ESM integration.
 
-All three packages keep the same version during the `0.x` stabilization period. Semantic Versioning
+All three packages keep the same version during the `0.x` stabilization period.
+
+`@bible-strong/avatar-mcp` is versioned independently. It provides the MCP server for AI agents
+and is the source of the bundled server in the `avatar-lab` Claude Code plugin. Semantic Versioning
 is applied as follows:
 
 - a compatible fix increments the patch version (`0.1.0` to `0.1.1`);
@@ -38,3 +41,25 @@ pnpm packages:smoke
 
 Do not run `npm publish` from an individual package for routine releases. The initial `0.1.0`
 bootstrap publication is the only manual release.
+
+## Bootstrapping `@bible-strong/avatar-mcp`
+
+npm trusted publishing can only be configured for a package that already exists, so the first
+`@bible-strong/avatar-mcp` release is also manual. Do it before merging the package into `main`,
+otherwise the release workflow tries to publish `0.1.0` without credentials and fails:
+
+```sh
+pnpm install
+pnpm --filter @bible-strong/avatar-mcp build
+cd packages/avatar-mcp
+npm publish --access public
+```
+
+Then add the `release.yml` workflow as a trusted publisher for the package on npmjs.com.
+
+## Claude Code plugin
+
+The `avatar-lab` plugin under `plugins/avatar-lab` is distributed through the repository
+marketplace (`.claude-plugin/marketplace.json`), not npm. `pnpm version-packages` runs
+`pnpm plugin`, which copies the `@bible-strong/avatar-mcp` version into the plugin and marketplace
+manifests and regenerates the bundled server. `pnpm check` fails when they are stale.
