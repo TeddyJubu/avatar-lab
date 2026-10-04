@@ -40,7 +40,7 @@
     }
   },
   "scripts": {
-    "build": "vite build --config vite.config.ts && tsc -p tsconfig.build.json",
+    "build": "vite build --config vite.config.ts && tsc -p tsconfig.build.json && node scripts/build-workspace.mjs",
     "prepack": "pnpm build",
     "start": "node dist/cli.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -57,7 +57,9 @@
     "@resvg/resvg-js": "^2.6.2"
   },
   "devDependencies": {
+    "@bible-strong/avatar-web": "workspace:^",
     "@types/node": "^24.10.1",
+    "rolldown": "^1.0.0-rc.5",
     "typescript": "~6.0.3",
     "vite": "^8.0.13"
   },

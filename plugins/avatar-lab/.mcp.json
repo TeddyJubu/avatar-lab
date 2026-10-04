@@ -2,7 +2,11 @@
   "mcpServers": {
     "avatar-lab": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/server/avatar-mcp.mjs"]
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server/avatar-mcp.mjs",
+        "--workspace",
+        "${CLAUDE_PLUGIN_ROOT}/workspace"
+      ]
     }
   }
 }

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -14,8 +14,12 @@ let client: Client
 
 beforeEach(async () => {
   root = await mkdtemp(path.join(tmpdir(), 'avatar-mcp-test-'))
+  const workspaceDir = path.join(root, '.source-workspace')
+  await mkdir(workspaceDir)
+  await writeFile(path.join(workspaceDir, 'index.html'), '<title>Avatar Lab Workspace</title>')
+  await writeFile(path.join(workspaceDir, 'avatar-lab.js'), 'var AvatarLab = {}')
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await createAvatarMcpServer({ root }).connect(serverTransport)
+  await createAvatarMcpServer({ root, workspaceDir }).connect(serverTransport)
   client = new Client({ name: 'test-client', version: '1.0.0' })
   await client.connect(clientTransport)
 })
@@ -37,9 +41,11 @@ it('exposes the avatar authoring tools, resources and prompt', async () => {
     'create_avatar',
     'create_avatar_set',
     'edit_avatar',
+    'export_workspace_docs',
     'get_authoring_guide',
     'get_avatar_schema',
     'list_templates',
+    'prepare_workspace',
     'render_avatar',
     'validate_avatar',
   ])
@@ -135,4 +141,55 @@ it('rejects invalid input and paths outside the workspace root', async () => {
 
   const validation = await call('validate_avatar', { definition: '{"schema": 1}' })
   expect(validation.isError).toBe(true)
+})
+
+it('prepares the workspace artifact and exports avatars as database documents', async () => {
+  const prepared = await call('prepare_workspace')
+  expect(prepared.isError).toBeFalsy()
+  const { publish } = JSON.parse(texts(prepared)[0]!)
+  expect(publish).toMatchObject({
+    capabilities: { db: {}, user: {}, sample: {}, downloads: true },
+    icon: 'avatar',
+  })
+  expect(await readFile(publish.file_path, 'utf8')).toContain('Avatar Lab Workspace')
+  expect(await readFile(publish.files['avatar-lab.js'], 'utf8')).toContain('AvatarLab')
+
+  await call('create_avatar', {
+    spec: { name: 'Pixel Pal', behavior: { animations: ['idle'] } },
+    outputPath: 'avatars/pixel-pal.avatar.json',
+    preview: false,
+  })
+  const exported = await call('export_workspace_docs', {
+    avatars: [{ path: 'avatars/pixel-pal.avatar.json' }],
+    view: { selected: 'pixel-pal', animation: 'idle', caption: 'Meet Pixel Pal' },
+  })
+  expect(exported.isError).toBeFalsy()
+  const { writes } = JSON.parse(texts(exported)[0]!)
+  expect(
+    writes.map(
+      (write: { collection: string; doc_id: string }) => `${write.collection}/${write.doc_id}`
+    )
+  ).toEqual(['avatars/pixel-pal', 'workspace/view'])
+  const document = JSON.parse(await readFile(writes[0].file_path, 'utf8'))
+  expect(document).toMatchObject({ name: 'Pixel Pal', order: 0, updatedBy: 'claude' })
+  expect(parseAvatarDefinition(JSON.stringify(document.definition)).ok).toBe(true)
+  expect(JSON.parse(await readFile(writes[1].file_path, 'utf8'))).toEqual({
+    selected: 'pixel-pal',
+    animation: 'idle',
+    caption: 'Meet Pixel Pal',
+  })
+
+  // Documents saved back from the workspace can be edited directly.
+  const relative = path.relative(root, writes[0].file_path)
+  const edited = await call('edit_avatar', {
+    path: relative,
+    operations: [{ op: 'set_name', name: 'Pixel Pro' }],
+    outputPath: 'avatars/pixel-pro.avatar.json',
+    preview: false,
+    includeDefinition: false,
+  })
+  expect(edited.isError).toBeFalsy()
+  expect(await readFile(path.join(root, 'avatars/pixel-pro.avatar.json'), 'utf8')).toContain(
+    '"name": "Pixel Pro"'
+  )
 })

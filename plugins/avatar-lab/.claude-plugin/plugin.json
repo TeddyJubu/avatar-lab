@@ -1,7 +1,7 @@
 {
   "name": "avatar-lab",
   "version": "0.1.0",
-  "description": "Design, edit, validate and render Bible Strong procedural SVG avatars and whole avatar sets from Claude Code.",
+  "description": "Design, edit and render procedural SVG avatars and avatar sets, with a live claude.ai workspace artifact Claude controls through its database.",
   "author": { "name": "TeddyJubu", "url": "https://github.com/TeddyJubu" },
   "homepage": "https://avatars.bible-strong.app",
   "repository": "https://github.com/TeddyJubu/avatar-lab",

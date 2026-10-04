@@ -70,8 +70,21 @@ claude mcp add avatar-lab -- npx -y @teddyjubu/avatar-mcp
 | `validate_avatar`     | Validate a definition and summarize its expressions and animations.                         |
 | `render_avatar`       | Render an expression or an animation frame as SVG or PNG with optional backgrounds.         |
 
+| `prepare_workspace` | Write the workspace artifact page and runtime, and return the Artifact publish parameters. |
+| `export_workspace_docs` | Turn avatars into workspace database documents and ready-to-send ArtifactData batch writes. |
+
 Resources: `avatar://guide`, `avatar://schema` and `avatar://templates/base`. Prompt:
 `design_avatar_set`.
+
+## Workspace artifact
+
+`workspace/index.html` is a live studio page meant to be published as a claude.ai Artifact with the
+`db`, `user`, `sample` and `downloads` capabilities. It loads `avatar-lab.js`, a browser bundle of
+this package plus `@bible-strong/avatar-web`, and renders whatever is stored in its database:
+`avatars/<key>` documents, a `workspace/view` document that steers the stage, and `requests/<id>`
+documents people leave for Claude. The npm package ships both files in `dist/workspace`, and
+`--workspace <directory>` points the server at another copy. See the plugin README for the full
+data contract.
 
 ## Specs
 
