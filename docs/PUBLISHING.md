@@ -67,4 +67,5 @@ trusted publisher for the package on npmjs.com and delete the token.
 The `avatar-lab` plugin under `plugins/avatar-lab` is distributed through the repository
 marketplace (`.claude-plugin/marketplace.json`), not npm. `pnpm version-packages` runs
 `pnpm plugin`, which copies the `@teddyjubu/avatar-mcp` version into the plugin and marketplace
-manifests and regenerates the bundled server. `pnpm check` fails when they are stale.
+manifests and regenerates the bundled server and the workspace artifact files. `pnpm check` fails
+when they are stale.

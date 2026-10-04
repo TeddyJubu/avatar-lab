@@ -8,7 +8,7 @@
     {
       "name": "avatar-lab",
       "source": "./plugins/avatar-lab",
-      "description": "Design, edit, validate and render procedural SVG avatars and whole avatar sets.",
+      "description": "Design, edit and render procedural SVG avatars and avatar sets, with a live claude.ai workspace artifact Claude controls through its database.",
       "version": "0.1.0",
       "license": "AGPL-3.0-only",
       "category": "design",

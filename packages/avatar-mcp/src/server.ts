@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
@@ -29,16 +29,29 @@ import {
   definitionInputSchema,
   editOperationSchema,
 } from './schemas'
-import { renderAvatarSvg, renderContactSheetSvg, svgToPng, type SvgBackground } from './svg'
+import { svgToPng } from './png'
+import { renderAvatarSvg, renderContactSheetSvg, type SvgBackground } from './svg'
 import { baseBehaviorDefinition } from './templates'
+import { AVATAR_MCP_VERSION } from './version'
+import {
+  createWorkspaceAvatarDocument,
+  unwrapWorkspaceDocument,
+  WORKSPACE_CAPABILITIES,
+  WORKSPACE_COLLECTIONS,
+  WORKSPACE_VIEW_DOC,
+  workspaceAvatarKey,
+} from './workspace'
 
-export const AVATAR_MCP_VERSION = '0.1.0'
+export { AVATAR_MCP_VERSION }
+
 const MAX_SET_SIZE = 64
 const PREVIEW_SIZE = 256
 
 export type AvatarMcpServerOptions = {
   /** Directory that every file read or write must stay inside. Defaults to `process.cwd()`. */
   root?: string
+  /** Directory holding the workspace artifact (`index.html` and `avatar-lab.js`). */
+  workspaceDir?: string
 }
 
 type Content = CallToolResult['content'][number]
@@ -61,7 +74,10 @@ const pngContent = async (svg: string, width: number): Promise<Content> => {
     : text(svg)
 }
 
-export const createAvatarMcpServer = ({ root = process.cwd() }: AvatarMcpServerOptions = {}) => {
+export const createAvatarMcpServer = ({
+  root = process.cwd(),
+  workspaceDir,
+}: AvatarMcpServerOptions = {}) => {
   const workspaceRoot = path.resolve(root)
   const server = new McpServer(
     { name: 'bible-strong-avatar-lab', version: AVATAR_MCP_VERSION },
@@ -69,7 +85,9 @@ export const createAvatarMcpServer = ({ root = process.cwd() }: AvatarMcpServerO
       instructions:
         'Design procedural SVG avatars and avatar sets. Start with list_templates, create with ' +
         'create_avatar or create_avatar_set, refine with edit_avatar and preview with render_avatar. ' +
-        'Read get_authoring_guide for the coordinate system and expression semantics.',
+        'Read get_authoring_guide for the coordinate system and expression semantics. ' +
+        'To show avatars in a live workspace artifact, call prepare_workspace, publish it, and ' +
+        'sync avatars with export_workspace_docs and the ArtifactData tool.',
     }
   )
 
@@ -97,7 +115,18 @@ export const createAvatarMcpServer = ({ root = process.cwd() }: AvatarMcpServerO
     path?: string
   }): Promise<ValidationResult<AvatarDefinition>> => {
     if (definitionPath !== undefined) {
-      return parseAvatarDefinition(await readFile(resolvePath(definitionPath), 'utf8'))
+      const source = await readFile(resolvePath(definitionPath), 'utf8')
+      // Workspace documents saved from the artifact database wrap the definition.
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(source)
+      } catch {
+        return parseAvatarDefinition(source)
+      }
+      const unwrapped = unwrapWorkspaceDocument(parsed)
+      return unwrapped === parsed
+        ? parseAvatarDefinition(source)
+        : validateAvatarDefinition(unwrapped)
     }
     if (definition === undefined) {
       return {
@@ -109,7 +138,7 @@ export const createAvatarMcpServer = ({ root = process.cwd() }: AvatarMcpServerO
     }
     return typeof definition === 'string'
       ? parseAvatarDefinition(definition)
-      : validateAvatarDefinition(definition)
+      : validateAvatarDefinition(unwrapWorkspaceDocument(definition))
   }
 
   const serialize = (definition: Readonly<AvatarDefinition>) =>
@@ -512,6 +541,166 @@ export const createAvatarMcpServer = ({ root = process.cwd() }: AvatarMcpServerO
           content: [
             ...(written.length ? [json({ written })] : []),
             format === 'svg' ? text(svg) : await pngContent(svg, size),
+          ],
+        }
+      })
+  )
+
+  server.registerTool(
+    'prepare_workspace',
+    {
+      title: 'Prepare the workspace artifact',
+      description:
+        'Writes the Avatar Lab workspace page (index.html plus the avatar-lab.js runtime) into the workspace root and returns the exact Artifact publish parameters. The published page is a live studio: it renders every avatar stored in its database, plays expressions and animations, lets people edit and ask for changes, and follows the view Claude sets.',
+      inputSchema: {
+        dir: z
+          .string()
+          .optional()
+          .describe('Where to write the page (relative to root, default .avatar-lab/workspace)'),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    },
+    ({ dir = '.avatar-lab/workspace' }) =>
+      guarded(async () => {
+        if (!workspaceDir) {
+          return errorResult('This server was started without a workspace directory (--workspace).')
+        }
+        const source = path.resolve(workspaceDir)
+        const files = ['index.html', 'avatar-lab.js']
+        for (const file of files) {
+          try {
+            await access(path.join(source, file))
+          } catch {
+            return errorResult(`Workspace file '${file}' is missing from ${source}.`)
+          }
+        }
+        const target = resolvePath(dir)
+        await mkdir(target, { recursive: true })
+        for (const file of files) await copyFile(path.join(source, file), path.join(target, file))
+        const page = path.join(target, 'index.html')
+        const runtime = path.join(target, 'avatar-lab.js')
+        return {
+          content: [
+            json({
+              publish: {
+                file_path: page,
+                files: { 'avatar-lab.js': runtime },
+                capabilities: WORKSPACE_CAPABILITIES,
+                icon: 'avatar',
+                description:
+                  'Live Avatar Lab workspace: browse, play and edit procedural avatars with Claude.',
+              },
+              dataModel: {
+                [`${WORKSPACE_COLLECTIONS.avatars}/<key>`]:
+                  '{ name, definition, order, updatedAt, updatedBy } - one avatar; write with export_workspace_docs',
+                [`${WORKSPACE_COLLECTIONS.workspace}/${WORKSPACE_VIEW_DOC}`]:
+                  '{ selected, expression, animation, background, caption } - what the page shows',
+                [`${WORKSPACE_COLLECTIONS.requests}/<id>`]:
+                  '{ text, avatar, status: "open" | "done", reply, createdAt } - requests people left for Claude',
+              },
+              nextSteps: [
+                'Publish with the Artifact tool using the publish parameters above (include icon only on the first publish; to update an existing workspace pass its url instead).',
+                'Save the artifact URL in .avatar-lab/workspace.json so later sessions reuse it.',
+                'Create avatars, then call export_workspace_docs and send the returned writes with ArtifactData action "batch".',
+              ],
+            }),
+          ],
+        }
+      })
+  )
+
+  server.registerTool(
+    'export_workspace_docs',
+    {
+      title: 'Export avatars as workspace documents',
+      description:
+        'Turns avatar definitions or .avatar.json files into workspace database documents. Writes one JSON file per document and returns ready-to-send ArtifactData batch writes that reference those files, so large definitions never pass through the conversation. Optionally also sets the view the page shows.',
+      inputSchema: {
+        avatars: z
+          .array(
+            z.object({
+              ...definitionInputSchema,
+              key: z
+                .string()
+                .regex(/^[a-z0-9][a-z0-9-]{0,63}$/)
+                .optional()
+                .describe('Document id (default: derived from the avatar name)'),
+              order: z.number().optional().describe('Gallery position (default: list position)'),
+            })
+          )
+          .max(50)
+          .optional(),
+        view: z
+          .object({
+            selected: z.string().optional().describe('Avatar key to show on the stage'),
+            expression: z.string().optional(),
+            animation: z.string().optional().describe('Animation to play on the stage'),
+            background: backgroundSchema.optional(),
+            caption: z.string().max(280).optional().describe('Short note shown above the stage'),
+          })
+          .optional()
+          .describe('Also write workspace/view to steer what the page shows'),
+        outDir: z
+          .string()
+          .optional()
+          .describe('Where to write the document files (default .avatar-lab/db)'),
+        orderOffset: z
+          .number()
+          .optional()
+          .describe('Added to each default order, to append after existing avatars'),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    },
+    ({ avatars = [], view, outDir = '.avatar-lab/db', orderOffset = 0 }) =>
+      guarded(async () => {
+        if (!avatars.length && !view) return errorResult("Provide 'avatars', 'view' or both.")
+        const writes: { op: 'set'; collection: string; doc_id: string; file_path: string }[] = []
+        const keys = new Set<string>()
+        for (const [index, input] of avatars.entries()) {
+          const loaded = await loadDefinition(input)
+          if (!loaded.ok) {
+            return errorResult(
+              `Avatar ${index} is invalid; nothing was written.`,
+              loaded.errors.map(error => ({ ...error, path: `/avatars/${index}${error.path}` }))
+            )
+          }
+          const key = input.key ?? workspaceAvatarKey(loaded.value.name ?? `avatar-${index + 1}`)
+          if (keys.has(key)) return errorResult(`Duplicate workspace key '${key}'.`)
+          keys.add(key)
+          const document = createWorkspaceAvatarDocument(
+            loaded.value,
+            input.order ?? orderOffset + index
+          )
+          const relative = await writeWorkspaceFile(
+            path.join(outDir, WORKSPACE_COLLECTIONS.avatars, `${key}.json`),
+            `${JSON.stringify(document, null, 2)}\n`
+          )
+          writes.push({
+            op: 'set',
+            collection: WORKSPACE_COLLECTIONS.avatars,
+            doc_id: key,
+            file_path: path.join(workspaceRoot, relative),
+          })
+        }
+        if (view) {
+          const relative = await writeWorkspaceFile(
+            path.join(outDir, WORKSPACE_COLLECTIONS.workspace, `${WORKSPACE_VIEW_DOC}.json`),
+            `${JSON.stringify(view, null, 2)}\n`
+          )
+          writes.push({
+            op: 'set',
+            collection: WORKSPACE_COLLECTIONS.workspace,
+            doc_id: WORKSPACE_VIEW_DOC,
+            file_path: path.join(workspaceRoot, relative),
+          })
+        }
+        return {
+          content: [
+            json({
+              writes,
+              howToSend:
+                'Call ArtifactData with action "batch", the workspace url and these writes. Documents that already exist need if_version: list the collection first and add each current version.',
+            }),
           ],
         }
       })

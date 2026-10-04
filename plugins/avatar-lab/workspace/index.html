@@ -1,0 +1,1554 @@
+<title>Avatar Lab Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+/>
+<style>
+  /* Layout: a lab bench. Avatar shelf on the left, dotted stage in the middle, inspector on the right. */
+  :root {
+    --bg: #eceef3;
+    --surface: #f9fafc;
+    --raised: #ffffff;
+    --ink: #1b2030;
+    --muted: #5b6377;
+    --line: #d6dae4;
+    --accent: #4559c9;
+    --accent-soft: #e2e6fb;
+    --accent-ink: #ffffff;
+    --stage: #f3f5f9;
+    --dot: #c6ccd9;
+    --ok: #23865a;
+    --warn: #a86a08;
+    --danger: #c23b30;
+    --danger-soft: #fbe4e1;
+    --shadow: 0 1px 2px rgb(27 32 48 / 0.06), 0 8px 24px rgb(27 32 48 / 0.06);
+    --font-display: 'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    --font-body: 'Instrument Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #11141b;
+      --surface: #171b24;
+      --raised: #1d222d;
+      --ink: #e6e9f1;
+      --muted: #98a0b3;
+      --line: #2a303d;
+      --accent: #8b9dff;
+      --accent-soft: #252c4d;
+      --accent-ink: #10131b;
+      --stage: #141821;
+      --dot: #2b3242;
+      --ok: #4cc28c;
+      --warn: #e0a640;
+      --danger: #ef7468;
+      --danger-soft: #3a1f1e;
+      --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: #11141b;
+    --surface: #171b24;
+    --raised: #1d222d;
+    --ink: #e6e9f1;
+    --muted: #98a0b3;
+    --line: #2a303d;
+    --accent: #8b9dff;
+    --accent-soft: #252c4d;
+    --accent-ink: #10131b;
+    --stage: #141821;
+    --dot: #2b3242;
+    --ok: #4cc28c;
+    --warn: #e0a640;
+    --danger: #ef7468;
+    --danger-soft: #3a1f1e;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 14px/1.5 var(--font-body);
+    padding-inline: 16px;
+    padding-block: 12px 24px;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Top bar */
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding-block: 4px 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-right: auto;
+  }
+  .brand h1 {
+    font: 700 22px/1.1 var(--font-display);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .brand span {
+    color: var(--muted);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .pill::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .pill[data-tone='ok'] {
+    color: var(--ok);
+  }
+  .pill[data-tone='warn'] {
+    color: var(--warn);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--raised);
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background 120ms,
+      border-color 120ms;
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .btn.danger {
+    color: var(--danger);
+  }
+  .btn.danger.confirm {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--raised);
+  }
+  .btn.small {
+    min-height: 28px;
+    padding: 3px 10px;
+    font-size: 13px;
+  }
+
+  /* Bench grid */
+  .bench {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr) 320px;
+    gap: 16px;
+    max-width: 1440px;
+    margin-inline: auto;
+    align-items: start;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    min-width: 0;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px 8px;
+  }
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Shelf */
+  .shelf-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 8px 10px;
+    display: grid;
+    gap: 4px;
+    max-height: calc(100vh - 160px);
+    overflow: auto;
+  }
+  .shelf-item button {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .shelf-item button:hover {
+    background: var(--raised);
+  }
+  .shelf-item button[aria-current='true'] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background: var(--stage);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .thumb svg {
+    width: 100%;
+    height: 100%;
+  }
+  .shelf-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .shelf-meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .shelf-meta.bad {
+    color: var(--danger);
+  }
+
+  /* Stage */
+  .stage-col {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+  .caption {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+  }
+  .caption strong {
+    font: 700 13px/1.4 var(--font-display);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .stage {
+    position: relative;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background-color: var(--stage);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+    background-size: 18px 18px;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    min-height: 360px;
+    overflow: hidden;
+  }
+  .stage-mount {
+    width: min(100%, 420px);
+    aspect-ratio: 1;
+    max-width: 100%;
+  }
+  .stage-empty {
+    text-align: center;
+    max-width: 380px;
+    display: grid;
+    gap: 10px;
+    justify-items: center;
+  }
+  .stage-empty h2 {
+    font: 700 24px/1.15 var(--font-display);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .stage-empty p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .stage-hud {
+    position: absolute;
+    inset: 12px 12px auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    pointer-events: none;
+  }
+  .stage-hud > * {
+    pointer-events: auto;
+  }
+  .stage-label {
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+  .stage-title {
+    font: 700 20px/1.2 var(--font-display);
+  }
+  .now {
+    color: var(--muted);
+  }
+  .strip {
+    padding: 4px 14px 14px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 132px;
+    overflow: auto;
+    padding: 2px;
+  }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--raised);
+    border-radius: 999px;
+    padding: 3px 10px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .chip small {
+    opacity: 0.7;
+    margin-left: 4px;
+  }
+
+  /* Inspector */
+  .inspector {
+    display: grid;
+    gap: 16px;
+  }
+  .section {
+    padding: 0 14px 14px;
+    display: grid;
+    gap: 10px;
+  }
+  .field {
+    display: grid;
+    gap: 4px;
+  }
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .input,
+  textarea {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--raised);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 72px;
+  }
+  .colors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--raised);
+  }
+  .swatch input[type='color'] {
+    width: 30px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .facts dt {
+    color: var(--muted);
+  }
+  .facts dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .reply {
+    white-space: pre-wrap;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 220px;
+    overflow: auto;
+    font-size: 13px;
+  }
+  .hint {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 0;
+  }
+  .requests {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .request {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: var(--raised);
+    display: grid;
+    gap: 4px;
+  }
+  .request-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .status {
+    font-weight: 600;
+  }
+  .status[data-status='open'] {
+    color: var(--warn);
+  }
+  .status[data-status='done'] {
+    color: var(--ok);
+  }
+  .request-reply {
+    color: var(--muted);
+    font-size: 13px;
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 8px 14px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    max-width: calc(100% - 32px);
+    z-index: 10;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  @media (max-width: 1100px) {
+    .bench {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+    .inspector {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      align-items: start;
+    }
+  }
+  @media (max-width: 720px) {
+    .bench {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .shelf {
+      order: 2;
+    }
+    .stage-col {
+      order: 1;
+    }
+    .inspector {
+      order: 3;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .shelf-list {
+      display: flex;
+      overflow-x: auto;
+      max-height: none;
+    }
+    .shelf-item button {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      width: 96px;
+      text-align: center;
+    }
+    .shelf-meta {
+      display: none;
+    }
+    .stage {
+      min-height: 300px;
+      padding: 48px 12px 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+</style>
+
+<header class="bar">
+  <div class="brand">
+    <h1>Avatar Lab</h1>
+    <span id="count">Loading avatars…</span>
+  </div>
+  <span class="pill" id="status" data-tone="warn">Connecting</span>
+  <label class="btn" for="import-file" id="import-label">Import .avatar.json</label>
+  <input class="sr-only" type="file" id="import-file" accept=".json,application/json" multiple />
+</header>
+
+<main class="bench">
+  <aside class="panel shelf" aria-labelledby="shelf-title">
+    <div class="panel-head">
+      <h2 class="label" id="shelf-title">Avatars</h2>
+      <button class="btn small" id="add-starters" type="button" hidden>Add starter set</button>
+    </div>
+    <ul class="shelf-list" id="shelf"></ul>
+  </aside>
+
+  <section class="stage-col" aria-label="Stage">
+    <div class="caption" id="caption" hidden>
+      <strong>Claude</strong>
+      <span id="caption-text"></span>
+    </div>
+    <div class="stage" id="stage">
+      <div class="stage-hud" id="stage-hud" hidden>
+        <div class="stage-label">
+          <div class="stage-title" id="stage-title"></div>
+          <div class="now" id="now"></div>
+        </div>
+        <div class="row">
+          <button class="btn small" id="stop" type="button">Rest</button>
+          <button class="btn small" id="download-svg" type="button">Save SVG</button>
+        </div>
+      </div>
+      <div class="stage-mount" id="stage-mount" hidden></div>
+      <div class="stage-empty" id="stage-empty">
+        <h2>No avatars in this workspace yet</h2>
+        <p>
+          Ask Claude to design some, for example “five friendly support bots”, or add the starter
+          set to explore.
+        </p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2 class="label">Animations</h2></div>
+      <div class="strip"><div class="chips" id="animations"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2 class="label">Expressions</h2></div>
+      <div class="strip"><div class="chips" id="expressions"></div></div>
+    </div>
+  </section>
+
+  <aside class="inspector" aria-label="Inspector">
+    <section class="panel" aria-labelledby="identity-title">
+      <div class="panel-head"><h2 class="label" id="identity-title">Avatar</h2></div>
+      <div class="section">
+        <div class="field">
+          <label for="name">Name</label>
+          <input class="input" id="name" maxlength="120" autocomplete="off" disabled />
+        </div>
+        <div class="colors">
+          <div class="field">
+            <label for="body-color">Body</label>
+            <div class="swatch">
+              <input type="color" id="body-color" disabled /><span
+                class="mono"
+                id="body-hex"
+              ></span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="eye-color">Eyes</label>
+            <div class="swatch">
+              <input type="color" id="eye-color" disabled /><span class="mono" id="eye-hex"></span>
+            </div>
+          </div>
+        </div>
+        <dl class="facts" id="facts"></dl>
+        <div class="row">
+          <button class="btn small" id="download-json" type="button" disabled>
+            Save .avatar.json
+          </button>
+          <button class="btn small" id="copy-json" type="button" disabled>Copy JSON</button>
+          <button class="btn small danger" id="delete" type="button" disabled>Delete</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="ask-title">
+      <div class="panel-head"><h2 class="label" id="ask-title">Ask Claude</h2></div>
+      <div class="section">
+        <div class="field">
+          <label for="ask">Describe a new avatar or a change</label>
+          <textarea
+            id="ask"
+            placeholder="Give Nova bunny ears and a sleepy wink animation"
+          ></textarea>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="ask-now" type="button">Ask here</button>
+          <button class="btn" id="ask-later" type="button">Leave for Claude Code</button>
+          <button class="btn" id="ask-stop" type="button" hidden>Stop</button>
+        </div>
+        <p class="hint" id="ask-hint">
+          “Ask here” runs Claude in this page and edits avatars directly. “Leave for Claude Code”
+          adds a request your coding session picks up.
+        </p>
+        <div class="reply" id="reply" hidden></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="requests-title">
+      <div class="panel-head"><h2 class="label" id="requests-title">Requests</h2></div>
+      <div class="section">
+        <ul class="requests" id="requests"></ul>
+        <p class="hint" id="requests-empty">No requests yet.</p>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="avatar-lab.js"></script>
+<script>
+  ;(() => {
+    const Lab = window.AvatarLab
+    const $ = id => document.getElementById(id)
+    const el = (tag, props = {}, children = []) => {
+      const node = document.createElement(tag)
+      Object.assign(node, props)
+      for (const child of children) node.append(child)
+      return node
+    }
+
+    const state = {
+      mode: 'loading', // loading | live | preview
+      db: null,
+      sample: null,
+      downloads: null,
+      canWrite: true,
+      avatars: new Map(), // key -> { key, name, order, definition | null, error, raw }
+      selected: null,
+      stageKey: null,
+      stageRev: null,
+      controller: null,
+      active: null, // { type: 'animation' | 'expression', key }
+      view: null,
+      viewApplied: '',
+      requests: [],
+      fromCache: true,
+    }
+    const writeQueues = new Map()
+    const pendingColor = new Map()
+
+    let toastTimer
+    const toast = message => {
+      const node = $('toast')
+      node.textContent = message
+      node.hidden = false
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => (node.hidden = true), 3200)
+    }
+
+    const keyFromName = name =>
+      Lab.avatarDefinitionFileName(name || 'avatar').replace(/\.avatar\.json$/, '')
+    const uniqueKey = name => {
+      const base = keyFromName(name)
+      let key = base
+      for (let n = 2; state.avatars.has(key); n += 1) key = `${base}-${n}`
+      return key
+    }
+    const sortedAvatars = () =>
+      [...state.avatars.values()].sort(
+        (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || a.name.localeCompare(b.name)
+      )
+    const nextOrder = () =>
+      Math.max(
+        -1,
+        ...[...state.avatars.values()].map(a => (Number.isFinite(a.order) ? a.order : -1))
+      ) + 1
+    const selectedAvatar = () => (state.selected ? state.avatars.get(state.selected) : undefined)
+
+    const ingest = (key, doc) => {
+      const name = typeof doc?.name === 'string' && doc.name ? doc.name : key
+      const result = Lab.validateAvatarDefinition(doc?.definition)
+      return {
+        key,
+        name: result.ok ? result.value.name || name : name,
+        order: typeof doc?.order === 'number' ? doc.order : undefined,
+        definition: result.ok ? result.value : null,
+        error: result.ok ? null : `${result.errors[0]?.path || '/'}: ${result.errors[0]?.message}`,
+        rev: `${doc?.updatedAt ?? ''}|${result.ok ? JSON.stringify(result.value).length : 0}`,
+      }
+    }
+
+    // ---- Persistence ------------------------------------------------------------------------
+    const queueWrite = (key, run) => {
+      const next = (writeQueues.get(key) ?? Promise.resolve()).catch(() => {}).then(run)
+      writeQueues.set(key, next)
+      return next
+    }
+    const describeWriteError = error =>
+      error?.code === 'invalid_argument'
+        ? 'This workspace is read-only for you.'
+        : error?.code === 'quota_exceeded'
+          ? 'The workspace is full. Delete some avatars and try again.'
+          : 'Could not save. Check your connection and try again.'
+
+    const saveAvatar = async (key, definition, { order } = {}) => {
+      const existing = state.avatars.get(key)
+      const doc = {
+        name: definition.name || 'Avatar',
+        definition: JSON.parse(JSON.stringify(definition)),
+        order: order ?? existing?.order ?? nextOrder(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'workspace',
+      }
+      if (!state.db) {
+        state.avatars.set(key, ingest(key, doc))
+        render()
+        return
+      }
+      try {
+        await queueWrite(key, () => state.db.doc(`avatars/${key}`).set(doc))
+      } catch (error) {
+        if (error?.code === 'invalid_argument') state.canWrite = false
+        toast(describeWriteError(error))
+        render()
+        throw error
+      }
+    }
+
+    const deleteAvatar = async key => {
+      if (!state.db) {
+        state.avatars.delete(key)
+      } else {
+        try {
+          await queueWrite(key, () => state.db.doc(`avatars/${key}`).delete())
+        } catch (error) {
+          toast(describeWriteError(error))
+          return
+        }
+      }
+      if (state.selected === key)
+        state.selected = sortedAvatars().find(a => a.key !== key)?.key ?? null
+      render()
+    }
+
+    // ---- Stage ------------------------------------------------------------------------------
+    const destroyStage = () => {
+      state.controller?.destroy()
+      state.controller = null
+      state.stageKey = null
+      state.stageRev = null
+    }
+
+    const mountStage = avatar => {
+      destroyStage()
+      const mount = $('stage-mount')
+      mount.replaceChildren()
+      if (!avatar?.definition) return
+      const first = avatar.definition.animationOrder.includes('idle')
+        ? 'idle'
+        : avatar.definition.animationOrder[0]
+      const resume = state.active
+      state.controller = Lab.createAvatar(mount, {
+        definition: avatar.definition,
+        size: '100%',
+        ariaLabel: avatar.name,
+        autoplay: true,
+        ...(first ? { defaultAnimation: first } : {}),
+        onAnimationEnd: () => {
+          state.active = null
+          renderChips()
+        },
+        onError: error => toast(error.message),
+      })
+      state.stageKey = avatar.key
+      state.stageRev = avatar.rev
+      state.active = first ? { type: 'animation', key: first } : null
+      if (resume && resume.type === 'animation' && avatar.definition.animations[resume.key]) {
+        play(resume.key)
+      } else if (
+        resume &&
+        resume.type === 'expression' &&
+        avatar.definition.expressions[resume.key]
+      ) {
+        showExpression(resume.key)
+      }
+    }
+
+    const play = key => {
+      const result = state.controller?.play(key)
+      if (result && !result.ok) return toast(result.error.message)
+      state.active = { type: 'animation', key }
+      renderChips()
+    }
+    const showExpression = key => {
+      state.controller?.pause()
+      const result = state.controller?.setExpression(key)
+      if (result && !result.ok) return toast(result.error.message)
+      state.active = { type: 'expression', key }
+      renderChips()
+    }
+
+    const applyBackground = background => {
+      const stage = $('stage')
+      stage.style.background = ''
+      if (!background || background.type === 'transparent') return
+      const hex = value => (/^#[0-9a-f]{3,8}$/i.test(value) ? value : 'transparent')
+      if (background.type === 'solid') stage.style.background = hex(background.color)
+      if (background.type === 'linear')
+        stage.style.background = `linear-gradient(135deg, ${hex(background.from)}, ${hex(background.to)})`
+      if (background.type === 'radial')
+        stage.style.background = `radial-gradient(circle at 50% 42%, ${hex(background.from)}, ${hex(background.to)} 70%)`
+    }
+
+    // ---- View steering (written by Claude to workspace/view) ----------------------------------
+    const applyView = () => {
+      const view = state.view
+      const signature = JSON.stringify(view ?? null)
+      if (!view || signature === state.viewApplied) return
+      if (view.selected && !state.avatars.has(view.selected)) return // wait until it arrives
+      state.viewApplied = signature
+      if (view.selected) state.selected = view.selected
+      $('caption').hidden = !view.caption
+      $('caption-text').textContent = view.caption || ''
+      applyBackground(view.background)
+      render()
+      const avatar = selectedAvatar()
+      if (!avatar?.definition) return
+      if (view.animation && avatar.definition.animations[view.animation]) play(view.animation)
+      else if (view.expression && avatar.definition.expressions[view.expression])
+        showExpression(view.expression)
+    }
+
+    // ---- Rendering --------------------------------------------------------------------------
+    const renderStatus = () => {
+      const status = $('status')
+      const avatars = state.avatars.size
+      $('count').textContent =
+        state.mode === 'loading'
+          ? 'Loading avatars…'
+          : `${avatars} avatar${avatars === 1 ? '' : 's'}`
+      if (state.mode === 'live') {
+        status.dataset.tone = state.canWrite ? 'ok' : 'warn'
+        status.textContent = state.canWrite ? (state.fromCache ? 'Syncing' : 'Live') : 'Read-only'
+        status.title = 'Shared with Claude and everyone who opens this workspace'
+      } else if (state.mode === 'preview') {
+        status.dataset.tone = 'warn'
+        status.textContent = 'Preview'
+        status.title = 'Open this page on claude.ai to save changes and share them with Claude'
+      } else {
+        status.dataset.tone = 'warn'
+        status.textContent = 'Connecting'
+      }
+    }
+
+    const renderShelf = () => {
+      const list = $('shelf')
+      list.replaceChildren(
+        ...sortedAvatars().map(avatar => {
+          const thumb = el('span', { className: 'thumb' })
+          if (avatar.definition)
+            thumb.innerHTML = Lab.renderAvatarSvg(avatar.definition, { size: 52 })
+          const meta = el('span', {
+            className: avatar.error ? 'shelf-meta bad' : 'shelf-meta',
+            textContent: avatar.error
+              ? 'Invalid definition'
+              : `${avatar.definition.expressionOrder.length} expressions · ${avatar.definition.animationOrder.length} animations`,
+          })
+          const button = el('button', { type: 'button' }, [
+            thumb,
+            el('span', {}, [
+              el('span', { className: 'shelf-name', textContent: avatar.name }),
+              el('br'),
+              meta,
+            ]),
+          ])
+          button.setAttribute('aria-current', String(avatar.key === state.selected))
+          button.addEventListener('click', () => {
+            state.selected = avatar.key
+            state.active = null
+            render()
+          })
+          return el('li', { className: 'shelf-item' }, [button])
+        })
+      )
+      $('add-starters').hidden = !(
+        state.avatars.size === 0 &&
+        state.mode !== 'loading' &&
+        state.canWrite
+      )
+    }
+
+    const renderChips = () => {
+      const avatar = selectedAvatar()
+      const definition = avatar?.definition
+      const animations = $('animations')
+      const expressions = $('expressions')
+      animations.replaceChildren(
+        ...(definition?.animationOrder ?? []).map(key => {
+          const animation = definition.animations[key]
+          const chip = el('button', { type: 'button', className: 'chip', textContent: key })
+          if (animation.playbackMode !== 'loop')
+            chip.append(
+              el('small', { textContent: animation.playbackMode === 'once' ? 'once' : 'ping-pong' })
+            )
+          chip.title = animation.metadata?.description || `${animation.steps.length} steps`
+          chip.setAttribute(
+            'aria-pressed',
+            String(state.active?.type === 'animation' && state.active.key === key)
+          )
+          chip.addEventListener('click', () => play(key))
+          return chip
+        })
+      )
+      if (definition && !definition.animationOrder.length)
+        animations.append(el('span', { className: 'hint', textContent: 'No animations yet.' }))
+      expressions.replaceChildren(
+        ...(definition?.expressionOrder ?? []).map(key => {
+          const chip = el('button', { type: 'button', className: 'chip', textContent: key })
+          chip.setAttribute(
+            'aria-pressed',
+            String(state.active?.type === 'expression' && state.active.key === key)
+          )
+          chip.addEventListener('click', () => showExpression(key))
+          return chip
+        })
+      )
+      $('now').textContent = !definition
+        ? ''
+        : state.active?.type === 'animation'
+          ? `Playing ${state.active.key} · ${definition.animations[state.active.key]?.playbackMode ?? ''}`
+          : state.active?.type === 'expression'
+            ? `Holding ${state.active.key}`
+            : 'Resting'
+    }
+
+    const renderStage = () => {
+      const avatar = selectedAvatar()
+      const hasAvatar = Boolean(avatar?.definition)
+      $('stage-empty').hidden = hasAvatar
+      $('stage-mount').hidden = !hasAvatar
+      $('stage-hud').hidden = !hasAvatar
+      if (!avatar) {
+        destroyStage()
+        $('stage-empty').querySelector('h2').textContent =
+          state.mode === 'loading' ? 'Opening the workspace…' : 'No avatars in this workspace yet'
+        return
+      }
+      if (!avatar.definition) {
+        destroyStage()
+        $('stage-empty').hidden = false
+        $('stage-empty').querySelector('h2').textContent = `${avatar.name} needs fixing`
+        $('stage-empty').querySelector('p').textContent = avatar.error
+        return
+      }
+      $('stage-title').textContent = avatar.name
+      if (state.stageKey !== avatar.key || state.stageRev !== avatar.rev) mountStage(avatar)
+    }
+
+    const renderInspector = () => {
+      const avatar = selectedAvatar()
+      const definition = avatar?.definition
+      const editable = Boolean(definition) && state.canWrite
+      const name = $('name')
+      if (document.activeElement !== name) name.value = avatar?.name ?? ''
+      name.disabled = !editable
+      for (const [inputId, hexId, field] of [
+        ['body-color', 'body-hex', 'body'],
+        ['eye-color', 'eye-hex', 'eyes'],
+      ]) {
+        const input = $(inputId)
+        const value = definition?.colors[field] ?? '#000000'
+        if (!pendingColor.has(`${avatar?.key}:${field}`)) input.value = value
+        input.disabled = !editable
+        $(hexId).textContent = definition ? input.value : '—'
+      }
+      const facts = $('facts')
+      facts.replaceChildren()
+      if (definition) {
+        const rows = [
+          ['Key', avatar.key],
+          [
+            'Body',
+            [definition.body.primary.type, ...definition.body.nodes.map(n => n.surface.type)].join(
+              ' + '
+            ),
+          ],
+          ['Expressions', String(definition.expressionOrder.length)],
+          ['Animations', String(definition.animationOrder.length)],
+        ]
+        for (const [term, value] of rows)
+          facts.append(
+            el('dt', { textContent: term }),
+            el('dd', { textContent: value, className: term === 'Key' ? 'mono' : '' })
+          )
+      }
+      $('download-json').disabled = !definition
+      $('copy-json').disabled = !definition
+      $('delete').disabled = !avatar || !state.canWrite
+      $('download-svg').hidden = !state.downloads
+      $('download-json').hidden = !state.downloads
+      $('import-label').hidden = !state.canWrite
+      const busy = Boolean(askController)
+      $('ask-now').disabled = busy || !state.sample || !state.canWrite
+      $('ask-now').hidden = !state.sample
+      $('ask-later').disabled = busy || !state.db || !state.canWrite
+      $('ask-later').hidden = !state.db
+      $('ask-stop').hidden = !busy
+      $('ask-hint').textContent = !state.db
+        ? 'Open this workspace on claude.ai to ask Claude and keep your changes.'
+        : !state.canWrite
+          ? 'You can view this workspace but not change it.'
+          : '“Ask here” runs Claude in this page and edits avatars directly. “Leave for Claude Code” adds a request your coding session picks up.'
+    }
+
+    const renderRequests = () => {
+      const list = $('requests')
+      list.replaceChildren(
+        ...state.requests.map(request => {
+          const status = request.status === 'done' ? 'done' : 'open'
+          const badge = el('span', {
+            className: 'status',
+            textContent: status === 'done' ? 'Done' : 'Waiting',
+          })
+          badge.dataset.status = status
+          const created = new Date(request.createdAt || Date.now())
+          const item = el('li', { className: 'request' }, [
+            el('div', { className: 'request-head' }, [
+              el('span', {
+                textContent: `${request.avatar ? `${request.avatar} · ` : ''}${Number.isNaN(created.getTime()) ? '' : created.toLocaleString()}`,
+              }),
+              badge,
+            ]),
+            el('div', { textContent: String(request.text || '') }),
+          ])
+          if (request.reply)
+            item.append(
+              el('div', { className: 'request-reply', textContent: String(request.reply) })
+            )
+          return item
+        })
+      )
+      $('requests-empty').hidden = state.requests.length > 0
+    }
+
+    const render = () => {
+      if (!state.selected || !state.avatars.has(state.selected))
+        state.selected = sortedAvatars()[0]?.key ?? null
+      renderStatus()
+      renderShelf()
+      renderStage()
+      renderChips()
+      renderInspector()
+      renderRequests()
+    }
+
+    // ---- Inspector actions ------------------------------------------------------------------
+    const editSelected = async (operations, success) => {
+      const avatar = selectedAvatar()
+      if (!avatar?.definition) return
+      const result = Lab.editAvatarDefinition(avatar.definition, operations)
+      if (!result.ok) return toast(result.errors[0]?.message ?? 'That change is not valid.')
+      try {
+        await saveAvatar(avatar.key, result.value)
+        if (success) toast(success)
+      } catch {}
+    }
+
+    $('name').addEventListener('change', event => {
+      const value = event.target.value.trim()
+      const avatar = selectedAvatar()
+      if (!value || !avatar || value === avatar.name) return
+      editSelected([{ op: 'set_name', name: value }], 'Renamed')
+    })
+
+    for (const [inputId, hexId, field] of [
+      ['body-color', 'body-hex', 'body'],
+      ['eye-color', 'eye-hex', 'eyes'],
+    ]) {
+      $(inputId).addEventListener('input', event => {
+        const avatar = selectedAvatar()
+        if (!avatar) return
+        $(hexId).textContent = event.target.value
+        const pendingKey = `${avatar.key}:${field}`
+        clearTimeout(pendingColor.get(pendingKey))
+        pendingColor.set(
+          pendingKey,
+          setTimeout(async () => {
+            await editSelected([{ op: 'set_colors', [field]: event.target.value }])
+            pendingColor.delete(pendingKey)
+          }, 350)
+        )
+      })
+    }
+
+    const confirmDelete = $('delete')
+    let deleteArmed = null
+    confirmDelete.addEventListener('click', () => {
+      const avatar = selectedAvatar()
+      if (!avatar) return
+      if (deleteArmed !== avatar.key) {
+        deleteArmed = avatar.key
+        confirmDelete.textContent = `Delete ${avatar.name}?`
+        confirmDelete.classList.add('confirm')
+        setTimeout(() => {
+          deleteArmed = null
+          confirmDelete.textContent = 'Delete'
+          confirmDelete.classList.remove('confirm')
+        }, 4000)
+        return
+      }
+      deleteArmed = null
+      confirmDelete.textContent = 'Delete'
+      confirmDelete.classList.remove('confirm')
+      deleteAvatar(avatar.key).then(() => toast(`Deleted ${avatar.name}`))
+    })
+
+    $('stop').addEventListener('click', () => {
+      state.controller?.stop()
+      state.active = null
+      renderChips()
+    })
+
+    const saveFile = async (filename, data) => {
+      if (!state.downloads) return
+      try {
+        await state.downloads.save({ filename, data })
+      } catch (error) {
+        if (error?.code !== 'declined') toast('The file could not be saved.')
+      }
+    }
+    $('download-json').addEventListener('click', () => {
+      const avatar = selectedAvatar()
+      if (avatar?.definition)
+        saveFile(`${avatar.key}.avatar.json`, `${JSON.stringify(avatar.definition, null, 2)}\n`)
+    })
+    $('download-svg').addEventListener('click', () => {
+      const avatar = selectedAvatar()
+      if (!avatar?.definition) return
+      const options = { size: 1024 }
+      if (state.active?.type === 'expression') options.expression = state.active.key
+      saveFile(`${avatar.key}.svg`, Lab.renderAvatarSvg(avatar.definition, options))
+    })
+    $('copy-json').addEventListener('click', async () => {
+      const avatar = selectedAvatar()
+      if (!avatar?.definition) return
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(avatar.definition, null, 2))
+        toast('Copied the definition')
+      } catch {
+        toast('Copying is blocked here. Use Save .avatar.json instead.')
+      }
+    })
+
+    $('import-file').addEventListener('change', async event => {
+      const files = [...event.target.files]
+      event.target.value = ''
+      let imported = 0
+      for (const file of files) {
+        const parsed = Lab.parseAvatarDefinition(await file.text())
+        if (!parsed.ok) {
+          toast(`${file.name}: ${parsed.errors[0]?.message}`)
+          continue
+        }
+        const key = uniqueKey(parsed.value.name || file.name.replace(/\.avatar\.json$|\.json$/, ''))
+        try {
+          await saveAvatar(key, parsed.value)
+          state.selected = key
+          imported += 1
+        } catch {}
+      }
+      if (imported) toast(`Imported ${imported} avatar${imported === 1 ? '' : 's'}`)
+      render()
+    })
+
+    const starterSpecs = () => [
+      { name: 'Strobi', template: 'strobi' },
+      { name: 'Nova', template: 'nova' },
+      { name: 'Cubee', template: 'cubee' },
+      { name: 'Freddy', template: 'freddy' },
+    ]
+    $('add-starters').addEventListener('click', async () => {
+      $('add-starters').disabled = true
+      for (const [index, spec] of starterSpecs().entries()) {
+        const result = Lab.createAvatarFromSpec(spec)
+        if (result.ok)
+          await saveAvatar(uniqueKey(spec.name), result.value, { order: index }).catch(() => {})
+      }
+      $('add-starters').disabled = false
+      render()
+    })
+
+    // ---- Ask Claude -------------------------------------------------------------------------
+    let askController = null
+
+    const avatarSummary = avatar =>
+      avatar.definition
+        ? {
+            key: avatar.key,
+            ...Lab.describeAvatar(avatar.definition),
+            animations: avatar.definition.animationOrder,
+          }
+        : { key: avatar.key, name: avatar.name, error: avatar.error }
+
+    const pageTools = () => [
+      {
+        name: 'create_avatar',
+        description:
+          'Creates a new avatar from a compact spec (see the guide), saves it to the workspace and shows it. Returns its key and summary, or validation errors to fix.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            spec: {
+              type: 'object',
+              description:
+                'AvatarSpec: { name, template, colors: {body, eyes}, body: {primary, nodes: [{surface, position, rotation}]}, neutralEyes, behavior: {include, animations, expressions, customExpressions, customAnimations} }',
+            },
+          },
+          required: ['spec'],
+        },
+        execute: async ({ spec }) => {
+          const result = Lab.createAvatarFromSpec(spec && typeof spec === 'object' ? spec : {})
+          if (!result.ok) throw new Error(JSON.stringify(result.errors.slice(0, 5)))
+          const key = uniqueKey(result.value.name || 'avatar')
+          await saveAvatar(key, result.value)
+          state.selected = key
+          state.active = null
+          render()
+          return { key, summary: Lab.describeAvatar(result.value) }
+        },
+      },
+      {
+        name: 'edit_avatar',
+        description:
+          'Applies edit operations atomically to an existing avatar and saves it. Operations: set_name, set_colors, set_primary_surface, add_body_node, update_body_node, remove_body_node, set_neutral_eyes, upsert_expression, remove_expression, upsert_animation, remove_animation, reorder_expressions, reorder_animations. Returns the new summary or errors.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            key: { type: 'string', description: 'Avatar key from list_avatars' },
+            operations: {
+              type: 'array',
+              items: {
+                type: 'object',
+                description: 'One operation, e.g. { "op": "set_colors", "body": "#ff8800" }',
+              },
+            },
+          },
+          required: ['key', 'operations'],
+        },
+        execute: async ({ key, operations }) => {
+          const avatar = state.avatars.get(String(key))
+          if (!avatar?.definition) throw new Error(`No valid avatar '${key}'`)
+          const result = Lab.editAvatarDefinition(
+            avatar.definition,
+            Array.isArray(operations) ? operations : []
+          )
+          if (!result.ok) throw new Error(JSON.stringify(result.errors.slice(0, 5)))
+          await saveAvatar(avatar.key, result.value)
+          state.selected = avatar.key
+          render()
+          return { key: avatar.key, summary: Lab.describeAvatar(result.value) }
+        },
+      },
+      {
+        name: 'show',
+        description:
+          'Shows an avatar on the stage and optionally plays one of its animations or holds an expression. Returns what is shown.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            key: { type: 'string' },
+            animation: { type: 'string' },
+            expression: { type: 'string' },
+          },
+          required: ['key'],
+        },
+        execute: ({ key, animation, expression }) => {
+          if (!state.avatars.has(String(key))) throw new Error(`No avatar '${key}'`)
+          state.selected = String(key)
+          state.active = null
+          render()
+          if (animation) play(String(animation))
+          else if (expression) showExpression(String(expression))
+          return { shown: key, animation: animation ?? null, expression: expression ?? null }
+        },
+      },
+    ]
+
+    const askPrompt = text => {
+      const catalog = Lab.templateCatalog()
+      return [
+        'You are the design assistant inside the Avatar Lab workspace, a studio for procedural SVG avatars.',
+        'Use the tools to make the change the person asks for. Prefer small, targeted edits. After the tools, reply in two or three plain sentences saying what you changed.',
+        '',
+        Lab.authoringGuide(),
+        '',
+        `Character templates: ${catalog.characters.map(c => `${c.key} (${c.primarySurface}${c.secondaryNodes ? ` + ${c.secondaryNodes} nodes` : ''})`).join(', ')}`,
+        `Bundled animations: ${catalog.bundledAnimations.map(a => a.key).join(', ')}`,
+        `Bundled expressions: ${catalog.bundledExpressions.join(', ')}`,
+        '',
+        `Avatars in the workspace (selected: ${state.selected ?? 'none'}):`,
+        JSON.stringify(sortedAvatars().map(avatarSummary)).slice(0, 12000),
+        '',
+        `Request: ${text}`,
+      ].join('\n')
+    }
+
+    $('ask-now').addEventListener('click', async () => {
+      const text = $('ask').value.trim()
+      if (!text || !state.sample) return
+      askController = new AbortController()
+      const reply = $('reply')
+      reply.hidden = false
+      reply.textContent = 'Thinking…'
+      renderInspector()
+      try {
+        await state.sample(askPrompt(text), {
+          signal: askController.signal,
+          tools: pageTools(),
+          onText: ({ text: answer }) => {
+            reply.textContent = answer
+          },
+        })
+        $('ask').value = ''
+      } catch (error) {
+        reply.textContent = error?.text ?? ''
+        const messages = {
+          not_granted:
+            'Claude is not allowed in this page. You can still leave a request for Claude Code.',
+          sampling_disabled: 'Claude is not available for this account.',
+          tools_unavailable:
+            'This viewer cannot let Claude edit the page. Leave a request for Claude Code instead.',
+          rate_limited: 'Claude is busy. Try again in a moment.',
+          refused: 'Claude declined that request. Try wording it differently.',
+        }
+        if (error?.code !== 'cancelled') {
+          if (
+            [
+              'not_granted',
+              'sampling_disabled',
+              'not_declared',
+              'capability_disabled',
+              'capability_removed',
+              'tools_unavailable',
+            ].includes(error?.code)
+          )
+            state.sample = null
+          reply.textContent = `${reply.textContent ? `${reply.textContent}\n\n` : ''}${messages[error?.code] ?? 'Something went wrong. Try again.'}`
+        }
+      } finally {
+        askController = null
+        renderInspector()
+      }
+    })
+    $('ask-stop').addEventListener('click', () => askController?.abort())
+
+    $('ask-later').addEventListener('click', async () => {
+      const text = $('ask').value.trim()
+      if (!text || !state.db) return
+      try {
+        await state.db.collection('requests').add({
+          text: text.slice(0, 2000),
+          avatar: state.selected ?? null,
+          status: 'open',
+          reply: null,
+          createdAt: new Date().toISOString(),
+        })
+        $('ask').value = ''
+        toast('Request saved for Claude Code')
+      } catch (error) {
+        toast(describeWriteError(error))
+      }
+    })
+
+    // ---- Boot -------------------------------------------------------------------------------
+    const startPreview = () => {
+      state.mode = 'preview'
+      starterSpecs().forEach((spec, index) => {
+        const result = Lab.createAvatarFromSpec(spec)
+        if (result.ok)
+          state.avatars.set(
+            keyFromName(spec.name),
+            ingest(keyFromName(spec.name), {
+              name: spec.name,
+              definition: result.value,
+              order: index,
+            })
+          )
+      })
+      render()
+    }
+
+    const startLive = db => {
+      state.mode = 'live'
+      state.db = db
+      db.collection('avatars').onSnapshot(
+        snapshot => {
+          state.fromCache = snapshot.metadata.fromCache
+          const next = new Map()
+          for (const doc of snapshot.docs) {
+            const previous = state.avatars.get(doc.id)
+            const entry = ingest(doc.id, doc.data())
+            next.set(doc.id, previous && previous.rev === entry.rev ? previous : entry)
+          }
+          state.avatars = next
+          render()
+          applyView()
+        },
+        () => toast('Lost the connection to the workspace. Reload to reconnect.')
+      )
+      db.doc('workspace/view').onSnapshot(
+        snapshot => {
+          state.view = snapshot.exists ? snapshot.data() : null
+          if (!state.view) $('caption').hidden = true
+          applyView()
+        },
+        () => {}
+      )
+      db.collection('requests')
+        .orderBy('createdAt', 'desc')
+        .limit(30)
+        .onSnapshot(
+          snapshot => {
+            state.requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            renderRequests()
+          },
+          () => {}
+        )
+      render()
+    }
+
+    const boot = async () => {
+      render()
+      if (!window.claude?.use) return startPreview()
+      const [db, user, sample, downloads] = await Promise.all([
+        window.claude.use('db'),
+        window.claude.use('user'),
+        window.claude.use('sample'),
+        window.claude.use('downloads'),
+      ])
+      state.sample = sample
+      state.downloads = downloads
+      if (user) {
+        const allowed = await user.can('data.write')
+        if (allowed === false) state.canWrite = false
+      }
+      if (!db) return startPreview()
+      startLive(db)
+    }
+
+    if (!Lab) {
+      $('stage-empty').querySelector('h2').textContent = 'The avatar engine did not load'
+      $('stage-empty').querySelector('p').textContent =
+        'Reload the page. If it keeps happening, republish the workspace with avatar-lab.js.'
+      return
+    }
+    boot()
+  })()
+</script>

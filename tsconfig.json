@@ -18,7 +18,8 @@
         "./packages/avatar-core/src/avatarDefinition.schema.json"
       ],
       "@bible-strong/avatar-core/*": ["./packages/avatar-core/src/*"],
-      "@bible-strong/avatar-react": ["./packages/avatar-react/src/index.ts"]
+      "@bible-strong/avatar-react": ["./packages/avatar-react/src/index.ts"],
+      "@bible-strong/avatar-web": ["./packages/avatar-web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "isolatedModules": true,

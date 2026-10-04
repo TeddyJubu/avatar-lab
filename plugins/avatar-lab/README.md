@@ -19,15 +19,43 @@ Restart Claude Code after installing. Node.js 22.12 or newer must be on your `PA
 ## What it adds
 
 - **MCP server `avatar-lab`** with the tools `get_authoring_guide`, `list_templates`,
-  `get_avatar_schema`, `create_avatar`, `create_avatar_set`, `edit_avatar`, `validate_avatar` and
-  `render_avatar`.
+  `get_avatar_schema`, `create_avatar`, `create_avatar_set`, `edit_avatar`, `validate_avatar`,
+  `render_avatar`, `prepare_workspace` and `export_workspace_docs`.
+- **Workspace artifact**, a live studio page published to claude.ai that acts as the front end.
 - **Skill `avatar-design`**, which Claude uses automatically when you ask for avatars, mascots or
-  character sets.
-- **Command `/avatar-lab:avatar-set <theme>`**, which designs and saves a themed set into
-  `avatars/`.
+  character sets, or mention the workspace.
+- **Commands** `/avatar-lab:avatar-set <theme>`, which designs and saves a themed set into
+  `avatars/`, and `/avatar-lab:workspace [instruction]`, which opens the workspace, syncs your
+  avatar files and answers requests left in it.
 
 The server reads and writes files only inside the directory Claude Code was started in. Set
 `AVATAR_MCP_ROOT` to choose another directory.
+
+## The workspace
+
+Run `/avatar-lab:workspace` (or ask Claude to "open the avatar workspace"). Claude publishes the page
+in `workspace/` as a private claude.ai Artifact and saves its link in `.avatar-lab/workspace.json`.
+
+The page renders every avatar stored in its database, plays any expression or animation, and lets
+you rename, recolor, import, export and delete avatars. Everything it shows lives in the artifact's
+shared database, which is also Claude's control surface:
+
+| Document         | Contents                                                   | Written by                |
+| ---------------- | ---------------------------------------------------------- | ------------------------- |
+| `avatars/<key>`  | `{ name, definition, order, updatedAt, updatedBy }`        | Claude and the page       |
+| `workspace/view` | `{ selected, expression, animation, background, caption }` | Claude, to steer the page |
+| `requests/<id>`  | `{ text, avatar, status, reply, createdAt }`               | the page; Claude replies  |
+
+Claude writes these with its ArtifactData tool. `export_workspace_docs` turns `.avatar.json` files
+into ready-to-send writes that reference files on disk, so large definitions never pass through
+the conversation. Changes made in the page are visible to Claude on its next read.
+
+In the page, **Ask here** runs Claude inside the workspace with page functions as tools
+(`create_avatar`, `edit_avatar`, `show`), using the viewer's own Claude usage. **Leave for Claude
+Code** adds a request to `requests/` that your coding session picks up and answers.
+
+The workspace needs a Claude Code session with Artifacts (claude.ai sign-in). Without it, the
+plugin still works with files and previews.
 
 ## Previews
 
@@ -43,8 +71,9 @@ Alternatively, run the npm package, which installs it automatically:
 
 ## Development
 
-The server in `server/avatar-mcp.mjs` is generated from `packages/avatar-mcp`. Run `pnpm plugin`
-after changing it; `pnpm check` fails when the bundle is stale.
+`server/avatar-mcp.mjs`, `workspace/index.html` and `workspace/avatar-lab.js` are generated from
+`packages/avatar-mcp` (the page source is `packages/avatar-mcp/workspace/index.html`). Run
+`pnpm plugin` after changing them; `pnpm check` fails when they are stale.
 
 ## License
 

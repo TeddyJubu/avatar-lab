@@ -14,6 +14,7 @@ export default defineConfig({
         'packages/avatar-core/src/avatarDefinition.schema.json'
       ),
       '@bible-strong/avatar-core': path.join(root, 'packages/avatar-core/src/index.ts'),
+      '@bible-strong/avatar-web': path.join(root, 'packages/avatar-web/src/index.ts'),
     },
   },
   test: {
