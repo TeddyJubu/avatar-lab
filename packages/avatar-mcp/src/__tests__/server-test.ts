@@ -233,3 +233,36 @@ it('adds an animated mouth and whiskers through the edit tool', async () => {
     whiskers: { angle: 10 },
   })
 })
+
+it('gives body nodes their own color through the edit tool', async () => {
+  const created = await call('create_avatar', {
+    spec: { name: 'Bun', colors: { body: '#ffffff' }, behavior: { include: 'none' } },
+    outputPath: 'avatars/bun.avatar.json',
+    preview: false,
+  })
+  expect(created.isError).toBeFalsy()
+
+  const edited = await call('edit_avatar', {
+    path: 'avatars/bun.avatar.json',
+    operations: [
+      {
+        op: 'add_body_node',
+        node: { surface: 'capsule', position: [-36, -130, -16] },
+      },
+      {
+        op: 'add_body_node',
+        node: { surface: 'capsule', position: [-36, -134, -10], color: '#F8A' },
+      },
+      { op: 'update_body_node', index: 0, color: '#eeeeee' },
+      { op: 'update_body_node', index: 0, color: null },
+    ],
+    preview: false,
+    includeDefinition: false,
+  })
+  expect(edited.isError).toBeFalsy()
+  const saved = parseAvatarDefinition(
+    await readFile(path.join(root, 'avatars/bun.avatar.json'), 'utf8')
+  )
+  if (!saved.ok) throw new Error(saved.errors[0]?.message)
+  expect(saved.value.body.nodes.map(node => node.color)).toEqual([undefined, '#ff88aa'])
+})

@@ -70,6 +70,39 @@ describe('@bible-strong/avatar-web', () => {
     avatar.destroy()
   })
 
+  it('paints body nodes with their own color and the rest with the body color', () => {
+    const definition = {
+      ...structuredClone(definitionJson),
+      body: {
+        ...structuredClone(definitionJson.body),
+        nodes: [
+          {
+            surface: { type: 'capsule', width: 44, height: 120, depth: 26, roundness: 1 },
+            position: [-40, -130, -20],
+            rotation: [0, 0, -8],
+          },
+          {
+            surface: { type: 'sphere', width: 20, height: 14, depth: 14, roundness: 1 },
+            position: [0, 30, 125],
+            rotation: [0, 0, 0],
+            color: '#c2405f',
+          },
+        ],
+      },
+    }
+    const avatar = createAvatar('#avatar', { definition, defaultExpression: 'neutral' })
+    const paths = [...document.querySelectorAll('#avatar svg > path')]
+    const drawn = (slots: Element[]) => slots.filter(path => path.getAttribute('d'))
+
+    const [ear] = drawn(paths.slice(0, 18))
+    const [nose] = drawn(paths.slice(19))
+    expect(ear!.getAttribute('fill')).toBe(definitionJson.colors.body)
+    expect(nose!.getAttribute('fill')).toBe('#c2405f')
+    expect(paths[18]!.getAttribute('fill')).toBe(definitionJson.colors.body)
+
+    avatar.destroy()
+  })
+
   it('returns typed errors for unknown targets', () => {
     const avatar = createAvatar('#avatar', { definition: definitionJson })
 

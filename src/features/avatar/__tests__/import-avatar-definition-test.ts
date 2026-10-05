@@ -42,6 +42,30 @@ describe('studioAvatarFromDefinition', () => {
     expect(result.value.expressionOrder).toEqual(strobi.expressionOrder)
   })
 
+  it('drops per-node colors on import and keeps the node geometry', () => {
+    const withNodeColor = {
+      ...structuredClone(strobi),
+      body: {
+        ...structuredClone(strobi.body),
+        nodes: [
+          {
+            surface: { type: 'capsule', width: 40, height: 110, depth: 26, roundness: 1 },
+            position: [-34, -120, -14],
+            rotation: [0, 0, 0],
+            color: '#ff88aa',
+          },
+        ],
+      },
+    }
+    const { avatar, expressions, sequences } = studioAvatarFromDefinition(withNodeColor)
+    expect(avatar.body.nodes).toHaveLength(1)
+    const result = createAvatarDefinition({ avatar, behavior: { expressions, sequences } })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value.body.nodes[0]).not.toHaveProperty('color')
+    expect(result.value.body.nodes[0]!.surface.type).toBe('capsule')
+  })
+
   it('round-trips back to the same definition', () => {
     const { avatar, expressions, sequences } = studioAvatarFromDefinition(strobi)
 

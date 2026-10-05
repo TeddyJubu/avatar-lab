@@ -36,6 +36,8 @@ export type BodyNodeSpec = {
   surface: SurfaceSpec
   position?: Vector3
   rotation?: Vector3
+  /** Fill for this node, such as inner ears or a nose. Defaults to the body color. */
+  color?: string
 }
 
 export type EyesSpec = Partial<EyeDefinition> & {
@@ -166,6 +168,7 @@ const resolveNode = (spec: BodyNodeSpec, path: string): AvatarBodyNodeDefinition
     surface: surface as SurfaceDefinition<BodyNodeSurfaceType>,
     position: [...(spec.position ?? [0, 0, 0])],
     rotation: [...(spec.rotation ?? [0, 0, 0])],
+    ...(spec.color !== undefined ? { color: normalizeColor(spec.color, `${path}/color`) } : {}),
   }
 }
 
@@ -508,6 +511,8 @@ export type AvatarEditOperation =
       surface?: SurfaceSpec
       position?: Vector3
       rotation?: Vector3
+      /** `null` returns the node to the body color. */
+      color?: string | null
     }
   | { op: 'remove_body_node'; index: number }
   | { op: 'set_neutral_eyes'; eyes: EyesSpec; shiftExpressions?: boolean }
@@ -558,11 +563,13 @@ const applyOperation = (
           `No body node at index ${operation.index}`
         )
       }
+      const color = operation.color === null ? undefined : (operation.color ?? node.color)
       definition.body.nodes[operation.index] = resolveNode(
         {
           surface: operation.surface ?? node.surface,
           position: operation.position ?? node.position,
           rotation: operation.rotation ?? node.rotation,
+          ...(color !== undefined ? { color } : {}),
         },
         path
       )
@@ -802,12 +809,16 @@ export const faceWarnings = (definition: Readonly<AvatarDefinition>): string[] =
 
 export const describeAvatar = (definition: Readonly<AvatarDefinition>) => {
   const warnings = faceWarnings(definition)
+  const nodeColors = Object.fromEntries(
+    definition.body.nodes.flatMap((node, index) => (node.color ? [[index, node.color]] : []))
+  )
   return {
     name: definition.name ?? null,
     colors: definition.colors,
     body: {
       primary: definition.body.primary.type,
       nodes: definition.body.nodes.map(node => node.surface.type),
+      ...(Object.keys(nodeColors).length ? { nodeColors } : {}),
     },
     face: {
       mouth: Boolean(definition.face?.mouth),

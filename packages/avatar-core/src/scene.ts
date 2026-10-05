@@ -83,8 +83,19 @@ export const bodyFromDefinition = (body: AvatarBodyDefinition): AvatarBody => ({
 
 export type AvatarScene = {
   geometry: AvatarGeometry
-  /** `mouth` and `whiskers` are present only for avatars that define those features. */
-  colors: { body: string; eyes: string; mouth?: string; whiskers?: string }
+  /**
+   * `mouth` and `whiskers` are present only for avatars that define those features.
+   * `backPaths` and `frontPaths` hold the fill of each path in `geometry.backPaths` and
+   * `geometry.frontPaths`; they are present only when a body node has its own color.
+   */
+  colors: {
+    body: string
+    eyes: string
+    mouth?: string
+    whiskers?: string
+    backPaths?: string[]
+    frontPaths?: string[]
+  }
 }
 
 export const renderAvatarExpression = (
@@ -95,17 +106,29 @@ export const renderAvatarExpression = (
 ): AvatarScene => {
   const body = bodyFromDefinition(definition.body)
   const face = definition.face
+  const bodyColor = colors.body ?? expression.bodyColor ?? definition.colors.body
   const eyes = colors.eyes ?? expression.eyeColor ?? definition.colors.eyes
+  const geometry = renderAvatar(poseFromExpression(expression), body.primary, blink, {
+    bodyNodes: body.nodes,
+    ...(face ? { face } : {}),
+  })
+  const nodeColors = new Map<string, string>()
+  definition.body.nodes.forEach((node, index) => {
+    if (node.color) nodeColors.set(body.nodes[index].id, node.color)
+  })
+  // Layers are depth sorted every frame, so fills follow the node ids rather than node order.
+  const fills = (ids: readonly (string | null)[]) =>
+    ids.map(id => (id === null ? undefined : nodeColors.get(id)) ?? bodyColor)
   return {
-    geometry: renderAvatar(poseFromExpression(expression), body.primary, blink, {
-      bodyNodes: body.nodes,
-      ...(face ? { face } : {}),
-    }),
+    geometry,
     colors: {
-      body: colors.body ?? expression.bodyColor ?? definition.colors.body,
+      body: bodyColor,
       eyes,
       ...(face?.mouth ? { mouth: face.mouth.color ?? eyes } : {}),
       ...(face?.whiskers ? { whiskers: face.whiskers.color ?? eyes } : {}),
+      ...(nodeColors.size
+        ? { backPaths: fills(geometry.backNodeIds), frontPaths: fills(geometry.frontNodeIds) }
+        : {}),
     },
   }
 }
