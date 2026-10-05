@@ -224,8 +224,19 @@ const easing = (
   const progress = Math.max(0, Math.min(1, value))
   if (transition === 'smooth') return progress * progress * (3 - 2 * progress)
   if (transition === 'snappy') return 1 - (1 - progress) ** 3
-  const end = 1 - Math.exp(-6) * Math.cos(8)
-  return Math.max(0, Math.min(1, (1 - Math.exp(-6 * progress) * Math.cos(8 * progress)) / end))
+  return springEasing(progress)
+}
+
+const SPRING_RATE = 8
+
+/**
+ * A critically damped spring released from rest: it eases out of the start, rises quickly and
+ * settles into the target without overshooting, so nothing stops abruptly. Scaled to land exactly
+ * on 1.
+ */
+const springEasing = (progress: number) => {
+  const curve = (value: number) => 1 - (1 + SPRING_RATE * value) * Math.exp(-SPRING_RATE * value)
+  return curve(progress) / curve(1)
 }
 
 const expressionColors = (
