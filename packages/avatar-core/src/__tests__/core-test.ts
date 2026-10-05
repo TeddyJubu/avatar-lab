@@ -148,6 +148,33 @@ describe('@bible-strong/avatar-core', () => {
     })
   })
 
+  it('eases spring transitions in and out without overshooting or stopping dead', () => {
+    const from = sampleAvatarFrame(definition, createAvatarPlaybackState(), 0, {
+      random: () => 0.5,
+    })
+    const state = {
+      ...createAvatarPlaybackState(),
+      activeExpression: 'curious-left',
+      status: 'playing' as const,
+      directTransition: { from, startedAt: 0, durationMs: 600, transition: 'spring' as const },
+    }
+    const frames = Array.from(
+      { length: 37 },
+      (_, frame) =>
+        sampleAvatarFrame(definition, state, frame * (600 / 36), { random: () => 0.5 }).expression
+          .headY
+    )
+    const steps = frames.slice(1).map((value, index) => frames[index]! - value)
+    // headY moves from 0 to -12: always forward, never past the target, landing exactly on it.
+    expect(steps.every(step => step >= 0)).toBe(true)
+    expect(Math.min(...frames)).toBeCloseTo(-12, 10)
+    expect(frames.at(-1)).toBeCloseTo(-12, 10)
+    // It starts from rest and never loses more than a little speed from one frame to the next.
+    expect(steps[0]).toBeLessThan(steps[2]!)
+    const slowdowns = steps.slice(1).map((step, index) => steps[index]! - step)
+    expect(Math.max(...slowdowns)).toBeLessThan(0.25)
+  })
+
   it('starts a new animation from the currently displayed frame instead of neutral', () => {
     const current = {
       ...createAvatarPlaybackState(),

@@ -249,6 +249,7 @@ export const createAvatarMcpServer = ({
             colors: avatarSpecSchema.shape.colors,
             neutralEyes: avatarSpecSchema.shape.neutralEyes,
             behavior: behaviorSpecSchema.optional(),
+            moodColors: avatarSpecSchema.shape.moodColors,
           })
           .optional()
           .describe('Defaults applied to every avatar unless that avatar overrides them'),
@@ -274,6 +275,7 @@ export const createAvatarMcpServer = ({
           ...(shared?.behavior && !spec.behavior ? { behavior: shared.behavior } : {}),
           ...(shared?.colors ? { colors: { ...shared.colors, ...spec.colors } } : {}),
           ...(shared?.neutralEyes && !spec.neutralEyes ? { neutralEyes: shared.neutralEyes } : {}),
+          ...(shared?.moodColors && !spec.moodColors ? { moodColors: shared.moodColors } : {}),
         }))
         if (!specs.length) return errorResult("Provide 'avatars', 'variations' or both.")
         if (specs.length > MAX_SET_SIZE) {
@@ -395,7 +397,7 @@ export const createAvatarMcpServer = ({
     {
       title: 'Edit an avatar',
       description:
-        'Applies an ordered list of edit operations atomically (all succeed and validate, or nothing changes): rename, recolor, change body surfaces and nodes (each node can have its own color), move neutral eyes, add, change or remove the mouth and whiskers, add/update/remove expressions and animations, reorder.',
+        'Applies an ordered list of edit operations atomically (all succeed and validate, or nothing changes): rename, recolor, change body surfaces and nodes (each node can have its own color), move neutral eyes, add, change or remove the mouth and whiskers, match the angry and uneasy tints to the avatar colors, add/update/remove expressions and animations, reorder.',
       inputSchema: {
         ...definitionInputSchema,
         operations: z.array(editOperationSchema).min(1).max(200),
@@ -765,7 +767,7 @@ export const createAvatarMcpServer = ({
               `Design a cohesive set of ${count ?? '6'} procedural avatars for: ${theme}.`,
               '1. Call get_authoring_guide and list_templates.',
               '2. Choose a shared palette and give each avatar a distinct silhouette (template, primary surface, body nodes) and personality (neutral eyes, custom expressions).',
-              `3. Call create_avatar_set with explicit specs${outputDir ? ` and outputDir "${outputDir}"` : ''}.`,
+              `3. Call create_avatar_set with explicit specs and shared moodColors "match", so the angry and uneasy tints suit each palette${outputDir ? `, and outputDir "${outputDir}"` : ''}.`,
               '4. Inspect the contact sheet, then fix anything clipped, illegible or too similar with edit_avatar.',
             ].join('\n'),
           },

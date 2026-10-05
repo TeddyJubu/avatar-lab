@@ -4,11 +4,13 @@ const avatarInstanceId = () => typeof globalThis.crypto?.randomUUID === 'functio
   ? globalThis.crypto.randomUUID()
   : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 const clamp01 = value => Math.max(0, Math.min(1, value));
+// A critically damped spring released from rest, matching @bible-strong/avatar-core.
+const springCurve = value => 1 - (1 + 8 * value) * Math.exp(-8 * value);
 const easeProgress = (progress, transition) => transition === 'smooth'
   ? progress * progress * (3 - 2 * progress)
   : transition === 'snappy'
     ? 1 - (1 - progress) ** 3
-    : 1 - Math.exp(-6 * progress) * Math.cos(8 * progress);
+    : springCurve(clamp01(progress)) / springCurve(1);
 const nearestAngle = (target, current) => {
   let resolved = target;
   while (resolved - current > 180) resolved -= 360;

@@ -18,6 +18,7 @@ import {
   type ValidationResult,
 } from '@bible-strong/avatar-core'
 
+import { matchedMoodColors, MOOD_EXPRESSION_KEYS, type MoodExpressionKey } from './moods'
 import {
   baseBehaviorDefinition,
   characterTemplates,
@@ -115,7 +116,14 @@ export type AvatarSpec = {
   /** Optional mouth and whiskers; expressions animate them with `mouth`/`whiskers` overrides. */
   face?: FaceSpec
   behavior?: BehaviorSpec
+  /**
+   * Fur tints of the bundled angry and uneasy expressions. `library` (default) keeps the Base
+   * library's dark red and pale blue; `match` derives both from the avatar's own colors.
+   */
+  moodColors?: MoodColorsMode
 }
+
+export type MoodColorsMode = 'library' | 'match'
 
 export type AuthoringResult<T> = ValidationResult<T>
 
@@ -342,21 +350,62 @@ const resolveAnimation = (
 
 const baseNeutralEyes = () => baseBehaviorDefinition.expressions.neutral.eyes
 
-/** A base expression shifted to the given neutral eyes, or undefined when it is not bundled. */
-const shiftedBaseExpression = (key: string, neutralEyes: NeutralEyes) => {
+type MoodColors = Record<MoodExpressionKey, HexColor>
+
+const isMoodKey = (key: string): key is MoodExpressionKey =>
+  (MOOD_EXPRESSION_KEYS as readonly string[]).includes(key)
+
+/**
+ * A base expression shifted to the given neutral eyes, or undefined when it is not bundled. With
+ * `moodColors`, the angry and uneasy expressions take those fur tints instead of the library's.
+ */
+const shiftedBaseExpression = (key: string, neutralEyes: NeutralEyes, moodColors?: MoodColors) => {
   const expression = baseBehaviorDefinition.expressions[key]
-  return expression
-    ? shiftExpressionEyes(clone(expression), baseNeutralEyes(), neutralEyes)
-    : undefined
+  if (!expression) return undefined
+  const shifted = shiftExpressionEyes(clone(expression), baseNeutralEyes(), neutralEyes)
+  if (moodColors && isMoodKey(key)) shifted.colors = { body: moodColors[key] }
+  return shifted
 }
 
+/** Mood expressions whose fur tint is still the one matched to `colors`. */
+const matchedMoodKeys = (
+  definition: Readonly<AvatarDefinition>,
+  colors: Readonly<AvatarDefinition['colors']>
+) => {
+  const matched = matchedMoodColors(colors)
+  return MOOD_EXPRESSION_KEYS.filter(key => {
+    const tint = definition.expressions[key]?.colors
+    return tint?.body === matched[key] && tint.eyes === undefined
+  })
+}
+
+const setMoodColors = (definition: AvatarDefinition, keys: readonly MoodExpressionKey[]) => {
+  const matched = matchedMoodColors(definition.colors)
+  keys.forEach(key => {
+    definition.expressions[key] = {
+      ...definition.expressions[key]!,
+      colors: { body: matched[key] },
+    }
+  })
+}
+
+const eyesMatch = (a: NeutralEyes, b: NeutralEyes) =>
+  Math.abs(a.spacing - b.spacing) < 1e-6 &&
+  (['left', 'right'] as const).every(side =>
+    eyeFields.every(field => Math.abs(a[side][field] - b[side][field]) < 1e-6)
+  )
+
 /** Pulls bundled expressions referenced by animations but missing from the definition. */
-const includeReferencedExpressions = (definition: AvatarDefinition, path: string) => {
+const includeReferencedExpressions = (
+  definition: AvatarDefinition,
+  path: string,
+  moodColors?: MoodColors
+) => {
   const neutralEyes = definition.expressions.neutral.eyes
   Object.entries(definition.animations).forEach(([animationKey, animation]) => {
     animation.steps.forEach((step, index) => {
       if (definition.expressions[step.expression]) return
-      const pulled = shiftedBaseExpression(step.expression, neutralEyes)
+      const pulled = shiftedBaseExpression(step.expression, neutralEyes, moodColors)
       if (!pulled) {
         throw authoringError(
           `${path}/${animationKey}/steps/${index}/expression`,
@@ -458,11 +507,13 @@ export const createAvatarFromSpec = (spec: AvatarSpec = {}): AuthoringResult<Ava
     }
     const face = spec.face ? resolveFace(undefined, spec.face, '/face') : undefined
     if (face) definition.face = face
+    const moodColors =
+      spec.moodColors === 'match' ? matchedMoodColors(definition.colors) : undefined
 
     base.expressionOrder
       .filter(key => inheritedExpressions.has(key))
       .forEach(key => {
-        definition.expressions[key] = shiftedBaseExpression(key, neutralEyes)!
+        definition.expressions[key] = shiftedBaseExpression(key, neutralEyes, moodColors)!
         definition.expressionOrder.push(key)
       })
     base.animationOrder
@@ -473,7 +524,7 @@ export const createAvatarFromSpec = (spec: AvatarSpec = {}): AuthoringResult<Ava
       })
 
     const lookup = (key: string) =>
-      definition.expressions[key] ?? shiftedBaseExpression(key, neutralEyes)
+      definition.expressions[key] ?? shiftedBaseExpression(key, neutralEyes, moodColors)
     Object.entries(behavior.customExpressions ?? {}).forEach(([key, expressionSpec]) => {
       const path = `/behavior/customExpressions/${key}`
       checkSemanticKey(key, path)
@@ -495,7 +546,7 @@ export const createAvatarFromSpec = (spec: AvatarSpec = {}): AuthoringResult<Ava
       definition.animations[key] = resolveAnimation(animationSpec)
       if (!exists) definition.animationOrder.push(key)
     })
-    includeReferencedExpressions(definition, '/behavior/customAnimations')
+    includeReferencedExpressions(definition, '/behavior/customAnimations', moodColors)
 
     return validateAvatarDefinition(definition)
   })
@@ -523,6 +574,7 @@ export type AvatarEditOperation =
   | { op: 'reorder_expressions'; order: string[] }
   | { op: 'reorder_animations'; order: string[] }
   | { op: 'set_face'; mouth?: MouthSpec | null; whiskers?: WhiskersSpec | null }
+  | { op: 'set_mood_colors'; mode: MoodColorsMode }
 
 const reorder = (current: string[], requested: string[], path: string) => {
   requested.forEach((key, index) => {
@@ -544,10 +596,14 @@ const applyOperation = (
       if (operation.name) definition.name = operation.name
       else delete definition.name
       return
-    case 'set_colors':
+    case 'set_colors': {
+      const following = matchedMoodKeys(definition, definition.colors)
       if (operation.body) definition.colors.body = normalizeColor(operation.body, `${path}/body`)
       if (operation.eyes) definition.colors.eyes = normalizeColor(operation.eyes, `${path}/eyes`)
+      // Palette-matched moods follow the new colors; library and custom tints stay as they are.
+      setMoodColors(definition, following)
       return
+    }
     case 'set_primary_surface':
       definition.body.primary = resolveSurface(operation.surface)
       return
@@ -593,7 +649,15 @@ const applyOperation = (
         return
       }
       Object.keys(definition.expressions).forEach(key => {
-        definition.expressions[key] = shiftExpressionEyes(definition.expressions[key]!, from, to)
+        const expression = definition.expressions[key]!
+        // Bundled expressions with untouched eyes are rebuilt from the library rather than shifted,
+        // so eyes clamped to the minimum size (closed, squinting) close the same way as in the
+        // Studio whatever the earlier neutral eyes were.
+        const library = shiftedBaseExpression(key, from)
+        definition.expressions[key] =
+          library && eyesMatch(expression.eyes, library.eyes)
+            ? { ...expression, eyes: shiftedBaseExpression(key, to)!.eyes }
+            : shiftExpressionEyes(expression, from, to)
       })
       return
     }
@@ -641,7 +705,14 @@ const applyOperation = (
       const previous = definition.animations[operation.key]
       definition.animations[operation.key] = resolveAnimation(operation.animation, previous)
       if (!previous) definition.animationOrder.push(operation.key)
-      includeReferencedExpressions(definition, `${path}/animation`)
+      // A mood pulled into an avatar whose other mood follows its palette follows it too.
+      includeReferencedExpressions(
+        definition,
+        `${path}/animation`,
+        matchedMoodKeys(definition, definition.colors).length
+          ? matchedMoodColors(definition.colors)
+          : undefined
+      )
       return
     }
     case 'remove_animation':
@@ -673,6 +744,27 @@ const applyOperation = (
       const face = resolveFace(definition.face, operation, path)
       if (face) definition.face = face
       else delete definition.face
+      return
+    }
+    case 'set_mood_colors': {
+      const present = MOOD_EXPRESSION_KEYS.filter(key => definition.expressions[key])
+      if (!present.length) {
+        throw authoringError(
+          `${path}/op`,
+          'unknown_expression',
+          `The avatar has none of the bundled mood expressions (${MOOD_EXPRESSION_KEYS.join(', ')})`
+        )
+      }
+      if (operation.mode === 'match') {
+        setMoodColors(definition, present)
+        return
+      }
+      present.forEach(key => {
+        definition.expressions[key] = {
+          ...definition.expressions[key]!,
+          colors: clone(baseBehaviorDefinition.expressions[key]!.colors!),
+        }
+      })
     }
   }
 }

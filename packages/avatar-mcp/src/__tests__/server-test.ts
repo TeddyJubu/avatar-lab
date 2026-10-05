@@ -127,6 +127,32 @@ it('writes a whole avatar set with a manifest and contact sheet', async () => {
   expect(await readFile(path.join(root, 'crew/contact-sheet.svg'), 'utf8')).toContain('Captain')
 })
 
+it('matches mood tints to the palette through the set and edit tools', async () => {
+  const set = await call('create_avatar_set', {
+    avatars: [
+      { name: 'Captain', template: 'freddy' },
+      { name: 'Mate', template: 'nova', moodColors: 'library' },
+    ],
+    shared: { moodColors: 'match', behavior: { expressions: ['angry-brows'] } },
+    outputDir: 'crew',
+  })
+  expect(set.isError).toBeFalsy()
+  const angryTint = async (file: string) =>
+    JSON.parse(await readFile(path.join(root, 'crew', file), 'utf8')).expressions['angry-brows']
+      .colors
+  expect(await angryTint('captain.avatar.json')).toEqual({ body: '#ff6c6b' })
+  expect(await angryTint('mate.avatar.json')).toEqual({ body: '#ba3636', eyes: '#610000' })
+
+  const edited = await call('edit_avatar', {
+    path: 'crew/mate.avatar.json',
+    operations: [{ op: 'set_mood_colors', mode: 'match' }],
+    preview: false,
+    includeDefinition: false,
+  })
+  expect(edited.isError).toBeFalsy()
+  expect(await angryTint('mate.avatar.json')).toEqual({ body: '#0499a8' })
+})
+
 it('rejects invalid input and paths outside the workspace root', async () => {
   const invalid = await call('create_avatar_set', {
     avatars: [{ name: 'Fine' }, { name: 'Broken', template: 'unknown' }],

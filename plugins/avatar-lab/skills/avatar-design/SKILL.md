@@ -83,6 +83,10 @@ go beyond editing avatars), make the change, push it, then `update` the request 
 - Body nodes can have their own `color` for details such as pink inner ears, a nose or a belly
   patch. Give the detail a few units more z than the node it sits on so it paints on top, and pick
   a color that stays readable against the body color and its expression tints.
+- The bundled angry and uneasy expressions tint every avatar the same dark red and pale blue. Add
+  `"moodColors": "match"` to specs (or to `shared` for a set) so both tints come from the avatar's
+  own colors with readable eyes; the `set_mood_colors` edit does the same for existing avatars, and
+  matched tints follow later recolors.
 - Keys are lowercase kebab-case. Colors are `#rrggbb`.
 
 ## Handing off

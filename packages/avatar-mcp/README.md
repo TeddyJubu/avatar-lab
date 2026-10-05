@@ -135,12 +135,18 @@ default) and the bundled behavior library.
 ```
 
 - Changing `neutralEyes` shifts every inherited expression by the same delta, exactly like the
-  Studio, so expressions stay relative to the neutral appearance.
+  Studio, so expressions stay relative to the neutral appearance. `set_neutral_eyes` rebuilds
+  untouched bundled expressions from the library, so eyes held at the 10 unit minimum (closed,
+  squinting) still close after the neutral eyes grow.
 - `behavior.include: "none"` keeps only `neutral`; `behavior.animations` and
   `behavior.expressions` inherit a subset. Custom animations automatically pull in any bundled
   expression they reference.
 - `create_avatar_set` accepts `variations: { count, seed, templates, palette, namePrefix }` to
-  generate deterministic sets, and `shared` defaults for colors, eyes and behavior.
+  generate deterministic sets, and `shared` defaults for colors, eyes, behavior and `moodColors`.
+- `"moodColors": "match"` tints the bundled `angry-brows` and `uneasy-left` expressions from the
+  avatar's own colors instead of the library's dark red and pale blue, and keeps the eyes readable
+  on them (at least 4.5:1). Matched tints follow `set_colors`; the `set_mood_colors` edit switches
+  an existing avatar between `match` and `library`.
 - `face` adds an optional mouth and whiskers (drawn in the eye color unless they set `color`):
   `{ "mouth": { "thickness": 3, "x": 0, "y": 50, "width": 22, "curve": 4, "cat": 1 },
 "whiskers": { "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44 } }`. Expressions
