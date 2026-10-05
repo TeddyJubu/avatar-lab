@@ -57,9 +57,11 @@ Studio does not edit them yet, so author them with the MCP tools or by hand; imp
 definition into the Studio keeps everything except the face.
 
 Body nodes can also set their own `color`, for details such as pink inner ears or a nose; the
-other nodes keep the body color, expression tints included. Scenes report the fill of every body
-path in `colors.backPaths` and `colors.frontPaths`, which the React, web and MCP SVG renderers
-paint. The Studio imports such nodes in the body color.
+other nodes keep the body color, expression tints included. When at least one node sets a color,
+scenes also report the fill of every body path in `colors.backPaths` and `colors.frontPaths`,
+which the React, web and MCP SVG renderers paint; for avatars without node colors those keys are
+absent, so read them with a fallback to `colors.body`. The Studio imports such nodes in the body
+color.
 
 ### React / TypeScript
 

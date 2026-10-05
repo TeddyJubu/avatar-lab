@@ -42,7 +42,7 @@ describe('studioAvatarFromDefinition', () => {
     expect(result.value.expressionOrder).toEqual(strobi.expressionOrder)
   })
 
-  it('imports body nodes with their own color in the body color', () => {
+  it('drops per-node colors on import and keeps the node geometry', () => {
     const withNodeColor = {
       ...structuredClone(strobi),
       body: {
