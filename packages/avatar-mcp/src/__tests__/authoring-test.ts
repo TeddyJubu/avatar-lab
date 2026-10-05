@@ -195,6 +195,24 @@ describe('editAvatarDefinition', () => {
     )
   })
 
+  it('rebuilds bundled expressions instead of shifting eyes clamped to the minimum size', () => {
+    // Short neutral eyes clamp closed and squinting eyes to the minimum height. Growing them back
+    // must close those eyes like a fresh avatar does, not leave them half open.
+    const short = create({
+      template: 'nova',
+      neutralEyes: { height: 26 },
+      behavior: { customExpressions: { peek: { eyes: { height: 30 } } } },
+    })
+    const grown = editAvatarDefinition(short, [{ op: 'set_neutral_eyes', eyes: { height: 46 } }])
+    if (!grown.ok) throw new Error(JSON.stringify(grown.errors))
+    const { peek, ...bundled } = grown.value.expressions
+    const fresh = create({ template: 'nova' }).expressions
+    expect(rounded(bundled)).toEqual(rounded(fresh))
+    expect(fresh['eyes-closed']!.eyes.left.height).toBeLessThan(12)
+    // Custom expressions still move by the same delta.
+    expect(peek!.eyes.left.height).toBeCloseTo(50)
+  })
+
   it('is atomic and protects referenced expressions', () => {
     const result = editAvatarDefinition(base, [
       { op: 'set_name', name: 'Never applied' },

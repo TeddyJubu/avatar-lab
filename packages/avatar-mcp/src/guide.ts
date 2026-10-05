@@ -45,7 +45,9 @@ range from 0 to 2.
 - Eye specs accept shared fields (\`{ "height": 60 }\` affects both eyes) and per-eye overrides
   (\`{ "left": { "angle": 12 } }\`).
 - \`neutral\` is the required resting expression. Changing \`neutralEyes\` shifts every inherited
-  expression by the same delta so they stay relative to the neutral appearance.
+  expression by the same delta so they stay relative to the neutral appearance. Eye sizes never
+  go below 10; bundled expressions are rebuilt from the library on \`set_neutral_eyes\`, so closed
+  and squinting eyes still close after the neutral eyes grow.
 - An expression also sets \`head\` rotation in degrees (x pitches: positive looks up, negative
   down; y turns: positive looks right, negative left; z tilts), \`perspective\` (0.1–10, default 1), ambient \`motion\`
   (eyes: none | microSaccades | shake, body: none | slowDrift | shake) and optional temporary
@@ -53,6 +55,11 @@ range from 0 to 2.
 - Custom expressions start from \`basedOn\` (any existing or bundled expression, default
   \`neutral\`) and override only what you specify. Squint: lower eye height. Surprise: taller,
   wider eyes. Anger/sadness: opposite eye angles. Looking aside: head y plus eye x.
+- The bundled \`angry-brows\` and \`uneasy-left\` expressions tint the fur with the library's dark
+  red (and dark red eyes) and pale blue, whatever the palette. \`"moodColors": "match"\` in a spec
+  (or in \`shared\` for a set), or the \`set_mood_colors\` edit, derives both tints from the
+  avatar's own colors instead and keeps its eyes readable on them (contrast of at least 4.5:1).
+  Matched tints follow later \`set_colors\` edits; \`"mode": "library"\` restores the shared ones.
 
 ## Mouth and whiskers
 

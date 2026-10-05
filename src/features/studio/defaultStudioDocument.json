@@ -114,7 +114,7 @@
         },
         "colors": {
           "body": "#e6855c",
-          "eyes": "#ffffff"
+          "eyes": "#3a1f12"
         },
         "eyes": {
           "widthLeft": 28.934879954481378,
@@ -136,9 +136,9 @@
         "body": {
           "primary": {
             "type": "cone",
-            "width": 252.708984375,
-            "height": 274.9671875,
-            "depth": 225,
+            "width": 222.38,
+            "height": 241.97,
+            "depth": 198,
             "roundness": 0,
             "morphRoundness": 1.1473828125,
             "tipRoundness": 0.743515625,
@@ -151,15 +151,15 @@
           "eyes": "#000000"
         },
         "eyes": {
-          "widthLeft": 20,
-          "widthRight": 20,
-          "heightLeft": 50,
-          "heightRight": 50,
-          "spacing": 35,
+          "widthLeft": 17.6,
+          "widthRight": 17.6,
+          "heightLeft": 44,
+          "heightRight": 44,
+          "spacing": 30.8,
           "positionXLeft": 0,
           "positionXRight": 0,
-          "positionYLeft": 22.954687500000002,
-          "positionYRight": 22.954687500000002,
+          "positionYLeft": 20.2,
+          "positionYRight": 20.2,
           "leftAngle": 0,
           "rightAngle": 0
         }
@@ -182,17 +182,17 @@
           "eyes": "#111316"
         },
         "eyes": {
-          "widthLeft": 13.26171875,
-          "widthRight": 13.26171875,
-          "heightLeft": 26.074181467301138,
-          "heightRight": 46.98897797482194,
-          "spacing": 19.765234375,
-          "positionXLeft": -12.965625,
-          "positionXRight": -12.965625,
-          "positionYLeft": 0.7968750000000009,
-          "positionYRight": -6.371484375,
-          "leftAngle": -7.4886718750000005,
-          "rightAngle": -7.796875
+          "widthLeft": 18,
+          "widthRight": 18,
+          "heightLeft": 46,
+          "heightRight": 46,
+          "spacing": 36,
+          "positionXLeft": 0,
+          "positionXRight": 0,
+          "positionYLeft": -3,
+          "positionYRight": -3,
+          "leftAngle": 0,
+          "rightAngle": 0
         }
       },
       {
@@ -243,15 +243,15 @@
               "name": "Sphère 1",
               "surface": {
                 "type": "sphere",
-                "width": 60,
-                "height": 60,
-                "depth": 24.375287224264703,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                -94.48309236361106,
-                -95.44637036124786,
-                -10.398419675330803
+                0,
+                -116,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -264,15 +264,15 @@
               "name": "Sphère 1 copie",
               "surface": {
                 "type": "sphere",
-                "width": 59.57851562500001,
-                "height": 59.57851562500001,
-                "depth": 24.204057179245304,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                -6.440040491385305,
-                -133.984012454223,
-                -10.398419675330803
+                82.02,
+                -82.02,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -285,15 +285,15 @@
               "name": "Sphère 1 copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 81.60000000000001,
-                "height": 81.60000000000001,
-                "depth": 33.150390625,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                89.09066821815593,
-                -114.30101031028101,
-                -10.398419675330803
+                116,
+                0,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -306,15 +306,15 @@
               "name": "Sphère 1 copie copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 70.12148437500001,
-                "height": 70.12148437500001,
-                "depth": 28.487188703873578,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                132.2484739833418,
-                -11.704819633353354,
-                -10.398419675330803
+                82.02,
+                82.02,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -327,15 +327,15 @@
               "name": "Sphère 1 copie copie copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 61.89843750000001,
-                "height": 61.89843750000001,
-                "depth": 25.146536546594966,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                -138.13379284351342,
-                -1.1847860044189815,
-                -10.398419675330803
+                0,
+                116,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -348,15 +348,15 @@
               "name": "Sphère 1 copie copie copie copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 61.11328125000001,
-                "height": 61.11328125000001,
-                "depth": 24.827563061433676,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                -103.29429634246448,
-                92.4041125555865,
-                -10.398419675330803
+                -82.02,
+                82.02,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -369,15 +369,15 @@
               "name": "Sphère 1 copie copie copie copie copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 61.726171875000006,
-                "height": 61.726171875000006,
-                "depth": 25.076552811790915,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                -2.4878844479075983,
-                133.06983674233183,
-                -10.398419675330803
+                -116,
+                0,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -390,15 +390,15 @@
               "name": "Sphère 1 copie copie copie copie copie copie copie",
               "surface": {
                 "type": "sphere",
-                "width": 64.116796875,
-                "height": 64.116796875,
-                "depth": 26.047755662132705,
+                "width": 52,
+                "height": 52,
+                "depth": 21.11,
                 "roundness": 1
               },
               "position": [
-                109.54168183067505,
-                83.98361858650364,
-                -10.398419675330803
+                -82.02,
+                -82.02,
+                -10.4
               ],
               "rotation": [
                 0,
@@ -443,13 +443,13 @@
               "name": "Sphère 1",
               "surface": {
                 "type": "sphere",
-                "width": 108.11015625000002,
+                "width": 94,
                 "height": 81.60000000000001,
                 "depth": 81.60000000000001,
                 "roundness": 1
               },
               "position": [
-                -103.30437876033604,
+                -88,
                 30.4449714479682,
                 -9.784765625
               ],
@@ -464,13 +464,13 @@
               "name": "Sphère 1 copie",
               "surface": {
                 "type": "sphere",
-                "width": 108.11015625000002,
+                "width": 94,
                 "height": 81.60000000000001,
                 "depth": 81.60000000000001,
                 "roundness": 1
               },
               "position": [
-                98.15429266544173,
+                88,
                 32.55003025735345,
                 -9.784765625
               ],
@@ -491,7 +491,7 @@
           "widthRight": 20,
           "heightLeft": 60.473828125,
           "heightRight": 60.473828125,
-          "spacing": 28.74921875,
+          "spacing": 31.5,
           "positionXLeft": 0,
           "positionXRight": 0,
           "positionYLeft": -7,
@@ -607,7 +607,7 @@
           "widthRight": 13.942812499999993,
           "heightLeft": 45.4203125,
           "heightRight": 45.4203125,
-          "spacing": 12.757031249999997,
+          "spacing": 22,
           "positionXLeft": 0,
           "positionXRight": 0,
           "positionYLeft": -1.0691406249999993,
@@ -634,11 +634,11 @@
           "eyes": "#111316"
         },
         "eyes": {
-          "widthLeft": 19.975390625,
-          "widthRight": 28.008984374999997,
-          "heightLeft": 29.983984375,
-          "heightRight": 36.986718749999994,
-          "spacing": 16.812109375,
+          "widthLeft": 26,
+          "widthRight": 26,
+          "heightLeft": 36,
+          "heightRight": 36,
+          "spacing": 40,
           "positionXLeft": 0,
           "positionXRight": 0,
           "positionYLeft": -7,
@@ -668,17 +668,17 @@
           "eyes": "#111316"
         },
         "eyes": {
-          "widthLeft": 13.389062500000001,
-          "widthRight": 19.10390625,
-          "heightLeft": 44.011328125000006,
-          "heightRight": 37.198828125000006,
-          "spacing": 21.41328125,
+          "widthLeft": 16,
+          "widthRight": 16,
+          "heightLeft": 42,
+          "heightRight": 42,
+          "spacing": 34,
           "positionXLeft": 0,
           "positionXRight": 0,
-          "positionYLeft": 18.613671875,
-          "positionYRight": 18.613671875,
-          "leftAngle": 6.980078125,
-          "rightAngle": -7.012890625000001
+          "positionYLeft": 18.6,
+          "positionYRight": 18.6,
+          "leftAngle": 7,
+          "rightAngle": -7
         }
       }
     ]

@@ -15,6 +15,7 @@ const dimension = z.number().min(0.001).max(10000)
 const vector3 = z.tuple([z.number(), z.number(), z.number()])
 const color = z.string().describe('#rrggbb (or #rgb) color')
 const semanticKey = z.string().describe("Lowercase kebab-case key such as 'happy-wave'")
+const moodColors = z.enum(['library', 'match'])
 
 export const surfaceSpecSchema = z
   .union([
@@ -200,6 +201,11 @@ export const avatarSpecSchema = z.object({
   neutralEyes: eyesSpecSchema.optional(),
   face: faceSpecSchema.optional(),
   behavior: behaviorSpecSchema.optional(),
+  moodColors: moodColors
+    .optional()
+    .describe(
+      "Fur tints of the bundled angry-brows and uneasy-left expressions: 'library' (default) keeps the shared dark red and pale blue; 'match' derives both from the avatar's colors and keeps its eyes readable"
+    ),
 })
 
 export const editOperationSchema = z.discriminatedUnion('op', [
@@ -222,7 +228,9 @@ export const editOperationSchema = z.discriminatedUnion('op', [
     shiftExpressions: z
       .boolean()
       .optional()
-      .describe('Shift every expression by the same delta (default true)'),
+      .describe(
+        'Move every expression with the neutral eyes (default true); untouched bundled ones are rebuilt from the library'
+      ),
   }),
   z.object({
     op: z.literal('upsert_expression'),
@@ -241,6 +249,12 @@ export const editOperationSchema = z.discriminatedUnion('op', [
       .nullable()
       .optional()
       .describe('Merged into the whiskers; null removes them'),
+  }),
+  z.object({
+    op: z.literal('set_mood_colors'),
+    mode: moodColors.describe(
+      "'match' tints angry-brows and uneasy-left from the avatar's colors (they then follow set_colors); 'library' restores the shared tints"
+    ),
   }),
 ])
 
