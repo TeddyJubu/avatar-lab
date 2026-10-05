@@ -25,6 +25,10 @@ animations. The same file drives
 - The primary surface carries the face and the eyes. Up to 16 secondary body nodes (ears, arms,
   antennas, horns, clouds…) have their own surface, \`position\` [x, y, z] and \`rotation\`
   [x, y, z] in degrees. Nodes with z > 0 render in front of the face, z < 0 behind it.
+- A node can set its own \`color\` (pink inner ears, a nose, a belly patch); otherwise it is
+  drawn in the body color, expression tints included. Nodes paint from back to front, so give a
+  decoration a few units more z than the node it sits on. Change or clear it with
+  \`update_body_node\` (\`"color": null\` returns to the body color).
 - Keep the silhouette within roughly ±140 units so nothing is clipped.
 
 ## Surfaces

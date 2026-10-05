@@ -80,6 +80,9 @@ go beyond editing avatars), make the change, push it, then `update` the request 
 "cat": 1 }, "whiskers": { "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44 } }`,
   then give expressions `mouth`/`whiskers` overrides (`{ "curve": 8, "open": 6 }`,
   `{ "angle": 12 }`) so animations move them. The authoring guide lists every field.
+- Body nodes can have their own `color` for details such as pink inner ears, a nose or a belly
+  patch. Give the detail a few units more z than the node it sits on so it paints on top, and pick
+  a color that stays readable against the body color and its expression tints.
 - Keys are lowercase kebab-case. Colors are `#rrggbb`.
 
 ## Handing off

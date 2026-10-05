@@ -56,6 +56,11 @@ through `mouth` and `whiskers` overrides, and the React, web and MCP SVG rendere
 Studio does not edit them yet, so author them with the MCP tools or by hand; importing such a
 definition into the Studio keeps everything except the face.
 
+Body nodes can also set their own `color`, for details such as pink inner ears or a nose; the
+other nodes keep the body color, expression tints included. Scenes report the fill of every body
+path in `colors.backPaths` and `colors.frontPaths`, which the React, web and MCP SVG renderers
+paint. The Studio imports such nodes in the body color.
+
 ### React / TypeScript
 
 Install `@bible-strong/avatar-react`, import the JSON and pass it to `createAvatar`. The React

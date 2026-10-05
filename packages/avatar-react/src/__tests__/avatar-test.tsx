@@ -135,6 +135,37 @@ describe('@bible-strong/avatar-react', () => {
     expect(svg.querySelectorAll(':scope > g')).toHaveLength(1)
   })
 
+  it('paints body nodes with their own color and the rest with the body color', () => {
+    const withNodes = {
+      ...definition,
+      body: {
+        ...definition.body,
+        nodes: [
+          {
+            surface: { type: 'capsule', width: 44, height: 120, depth: 26, roundness: 1 },
+            position: [-40, -130, -20],
+            rotation: [0, 0, -8],
+          },
+          {
+            surface: { type: 'sphere', width: 20, height: 14, depth: 14, roundness: 1 },
+            position: [0, 30, 125],
+            rotation: [0, 0, 0],
+            color: '#c2405f',
+          },
+        ],
+      },
+    } satisfies AvatarDefinition
+    const view = render(<Avatar definition={withNodes} ariaLabel="Bun" />)
+    const paths = [...view.getByRole('img', { name: 'Bun' }).querySelectorAll('svg > path')]
+    const drawn = (slots: Element[]) => slots.filter(path => path.getAttribute('d'))
+
+    const [ear] = drawn(paths.slice(0, 18))
+    const [nose] = drawn(paths.slice(19))
+    expect(ear!.getAttribute('fill')).toBe(definition.colors.body)
+    expect(nose!.getAttribute('fill')).toBe('#c2405f')
+    expect(paths[18]!.getAttribute('fill')).toBe(definition.colors.body)
+  })
+
   it('exposes semantic imperative controls without Studio identifiers', () => {
     const controller = createRef<AvatarController>()
     render(<Avatar definition={definition} ref={controller} />)

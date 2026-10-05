@@ -51,6 +51,8 @@ export type AvatarBodyNodeDefinition = {
   surface: BodyNodeSurfaceDefinition
   position: [number, number, number]
   rotation: [number, number, number]
+  /** Fill for this node, such as inner ears or a nose. Defaults to the body color of the frame. */
+  color?: HexColor
 }
 
 export type AvatarBodyDefinition = {

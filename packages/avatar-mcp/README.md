@@ -108,6 +108,18 @@ default) and the bundled behavior library.
         "surface": { "type": "capsule", "width": 40, "height": 110, "depth": 30 },
         "position": [45, -120, -20],
         "rotation": [0, 0, 12]
+      },
+      {
+        "surface": { "type": "capsule", "width": 20, "height": 80, "depth": 14 },
+        "position": [-46, -124, -14],
+        "rotation": [0, 0, -12],
+        "color": "#e8799b"
+      },
+      {
+        "surface": { "type": "capsule", "width": 20, "height": 80, "depth": 14 },
+        "position": [46, -124, -14],
+        "rotation": [0, 0, 12],
+        "color": "#e8799b"
       }
     ]
   },
@@ -134,6 +146,9 @@ default) and the bundled behavior library.
 "whiskers": { "count": 3, "thickness": 2, "x": 70, "y": 42, "length": 44 } }`. Expressions
   animate them with partial overrides such as `"mouth": { "curve": 8, "open": 6 }` and
   `"whiskers": { "angle": 12 }`; the `set_face` edit changes or removes them.
+- A body node can set its own `color`, like the inner ears above; it paints after nodes further
+  back, so give it a little more z than the node it decorates. `update_body_node` changes the
+  color, and `"color": null` returns the node to the body color.
 
 ## Library use
 

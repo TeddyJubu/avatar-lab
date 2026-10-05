@@ -1308,7 +1308,7 @@
             spec: {
               type: 'object',
               description:
-                'AvatarSpec: { name, template, colors: {body, eyes}, body: {primary, nodes: [{surface, position, rotation}]}, neutralEyes, face: {mouth, whiskers}, behavior: {include, animations, expressions, customExpressions, customAnimations} }',
+                'AvatarSpec: { name, template, colors: {body, eyes}, body: {primary, nodes: [{surface, position, rotation, color?}]}, neutralEyes, face: {mouth, whiskers}, behavior: {include, animations, expressions, customExpressions, customAnimations} }',
             },
           },
           required: ['spec'],
@@ -1327,7 +1327,7 @@
       {
         name: 'edit_avatar',
         description:
-          'Applies edit operations atomically to an existing avatar and saves it. Operations: set_name, set_colors, set_primary_surface, add_body_node, update_body_node, remove_body_node, set_neutral_eyes, upsert_expression, remove_expression, upsert_animation, remove_animation, reorder_expressions, reorder_animations, set_face (mouth and whiskers). Returns the new summary or errors.',
+          'Applies edit operations atomically to an existing avatar and saves it. Operations: set_name, set_colors, set_primary_surface, add_body_node, update_body_node (nodes can take their own color), remove_body_node, set_neutral_eyes, upsert_expression, remove_expression, upsert_animation, remove_animation, reorder_expressions, reorder_animations, set_face (mouth and whiskers). Returns the new summary or errors.',
         inputSchema: {
           type: 'object',
           properties: {

@@ -71,10 +71,14 @@ export const renderAvatarGroup = (
   const whiskerColor = colors.whiskers ?? colors.eyes
   return `<g${scale === 1 ? '' : ` transform="scale(${scale})"`}><defs><clipPath id="${clipId}"><path d="${escapeXml(geometry.headPath)}"/></clipPath></defs>${[
     ...geometry.whiskerBackPaths.map(d => pathMarkup(d, whiskerColor)),
-    ...geometry.backPaths.map(d => pathMarkup(d, colors.body)),
+    ...geometry.backPaths.map((d, index) =>
+      pathMarkup(d, colors.backPaths?.[index] ?? colors.body)
+    ),
     pathMarkup(geometry.headPath, colors.body),
     `<g clip-path="url(#${clipId})">${pathMarkup(geometry.leftPath, colors.eyes, geometry.leftVisible ? 1 : 0)}${pathMarkup(geometry.rightPath, colors.eyes, geometry.rightVisible ? 1 : 0)}${geometry.mouthPaths.map(d => pathMarkup(d, mouthColor)).join('')}</g>`,
-    ...geometry.frontPaths.map(d => pathMarkup(d, colors.body)),
+    ...geometry.frontPaths.map((d, index) =>
+      pathMarkup(d, colors.frontPaths?.[index] ?? colors.body)
+    ),
     ...geometry.whiskerFrontPaths.map(d => pathMarkup(d, whiskerColor)),
   ].join('')}</g>`
 }

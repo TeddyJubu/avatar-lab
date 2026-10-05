@@ -36,6 +36,9 @@ export const bodyNodeSpecSchema = z.object({
   surface: surfaceSpecSchema,
   position: vector3.optional().describe('[x, y, z]; negative y is up, positive z is in front'),
   rotation: vector3.optional().describe('[x, y, z] rotation in degrees'),
+  color: color
+    .optional()
+    .describe('Own fill, such as pink inner ears or a nose; defaults to the body color'),
 })
 
 const eyeFields = {
@@ -210,6 +213,7 @@ export const editOperationSchema = z.discriminatedUnion('op', [
     surface: surfaceSpecSchema.optional(),
     position: vector3.optional(),
     rotation: vector3.optional(),
+    color: color.nullable().optional().describe('null returns the node to the body color'),
   }),
   z.object({ op: z.literal('remove_body_node'), index: z.number().int().min(0) }),
   z.object({

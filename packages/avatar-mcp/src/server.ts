@@ -395,7 +395,7 @@ export const createAvatarMcpServer = ({
     {
       title: 'Edit an avatar',
       description:
-        'Applies an ordered list of edit operations atomically (all succeed and validate, or nothing changes): rename, recolor, change body surfaces and nodes, move neutral eyes, add, change or remove the mouth and whiskers, add/update/remove expressions and animations, reorder.',
+        'Applies an ordered list of edit operations atomically (all succeed and validate, or nothing changes): rename, recolor, change body surfaces and nodes (each node can have its own color), move neutral eyes, add, change or remove the mouth and whiskers, add/update/remove expressions and animations, reorder.',
       inputSchema: {
         ...definitionInputSchema,
         operations: z.array(editOperationSchema).min(1).max(200),
